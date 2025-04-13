@@ -6,7 +6,7 @@ const connection =  mariadb.createConnection({
     host: 'localhost',
     user: 'root',
     password : 'root',
-    database: 'Bookstore',
+    database: 'dajungdajung_project',
     dateStrings : true
   });
 
