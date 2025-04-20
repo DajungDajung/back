@@ -8,9 +8,6 @@ const jwtErrorhandler = require('../modules/auth/jwtErrorhandler');
 
 dotenv.config({path: __dirname + '/../.env'})
 
-// PUT /users/myPage → 유저 정보 수정
-// GET /users/myPage → 유저 정보 조회
-
 // 토큰을 발급받기 위한 임시 api 입니다
 const getToken = (req, res) => {
     const token = jwt.sign({
@@ -99,12 +96,8 @@ const updateMyPage = async (req, res) => {
     })
 }
 
-const getUserInfo = (req, res) => {
-    res.send("사용자 정보 조회입니다");
-}
-
 const getNewValueOrDefault = (newValue, defaultValue) => {
     return newValue !== undefined && newValue !== null && newValue !== '' ? newValue : defaultValue;
 }
 
-module.exports = {getMyPage, updateMyPage, getUserInfo, getToken};
+module.exports = {getMyPage, updateMyPage, getToken};

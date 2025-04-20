@@ -13,11 +13,13 @@ const itemRouter = require('./routes/items');
 const likeRouter = require('./routes/likes');
 const authRouter = require('./routes/auth');
 const MyPageRouter = require('./routes/myPage');
+const StoreRouter = require('./routes/store');
 
 app.use('/items', itemRouter);
 app.use('/likes', likeRouter);
-// app.use('/users', authRouter);
+app.use('/users', authRouter);
 app.use("/users", MyPageRouter);
+app.use('/store', StoreRouter);
 
 app.get('/',(req,res)=>{
     res.send('Hello World!');
