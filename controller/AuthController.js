@@ -66,7 +66,30 @@ const signIn = (req, res) => {
 
 const findId = (req, res) => {};
 
-const passwordResetRequest = (req, res) => {};
+const passwordResetRequest = (req, res) => {
+  const { name, email, contact } = req.body;
+  let sql = "SELECT * FROM users WHERE name = ? AND email = ? AND contact = ?";
+
+  let values = [name, email, contact];
+  conn.query(sql, values, (err, results) => {
+    if (err) {
+      console.log(err);
+      return res.status(StatusCodes.BAD_REQUEST).end();
+    }
+
+    const user = results[0];
+
+    if (user) {
+      return res.status(StatusCodes.OK).json({
+        name: name,
+        email: email,
+        contact: contact,
+      });
+    } else {
+      return res.status(StatusCodes.UNAUTHORIZED).end();
+    }
+  });
+};
 
 const passwordReset = (req, res) => {};
 
