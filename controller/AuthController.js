@@ -91,7 +91,34 @@ const passwordResetRequest = (req, res) => {
   });
 };
 
-const passwordReset = (req, res) => {};
+const passwordReset = (req, res) => {
+  const { password, passwordConfirm, email } = req.body;
+
+  if (password !== passwordConfirm) {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      message: "비밀번호와 비밀번호 확인이 일치하지 않습니다.",
+    });
+  }
+
+  const salt = crypto.randomBytes(64).toString("base64");
+  const hashPassword = crypto
+    .pbkdf2Sync(password, salt, 10000, 64, "sha512")
+    .toString("base64");
+  let sql = "UPDATE users SET password = ?, salt = ? WHERE email =?";
+  let values = [hashPassword, salt, email];
+
+  conn.query(sql, values, (err, results) => {
+    if (err) {
+      console.log(err);
+      return res.status(StatusCodes.BAD_REQUEST).end();
+    }
+    if (results.affectedRows == 0) {
+      return res.status(StatusCodes.BAD_REQUEST).end();
+    } else {
+      return res.status(StatusCodes.OK).json(results);
+    }
+  });
+};
 
 module.exports = {
   signUp,
