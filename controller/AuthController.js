@@ -6,7 +6,7 @@ const dotenv = require("dotenv"); //dotenv 모듈
 dotenv.config();
 
 //salt 처라허가가
-const signUp = (res, req) => {
+const signUp = (req, res) => {
   const { name, nickname, email, contact, password } = req.body;
   let sql =
     "INSERT INTO users (name, nickname, email, contact, password) VALUES (?,?,?,?,?)";
@@ -16,24 +16,107 @@ const signUp = (res, req) => {
     .pbkdf2Sync(password, salt, 10000, 64, "sha512")
     .toString("base64");
 
-  let values = [name, nickname, email, contact, password];
+  let values = [name, nickname, email, contact, hashPassword];
 
   conn.query(sql, values, (err, results) => {
     if (err) {
       console.log(err);
-      return res.status(StatusCodes.BAD_REQUEST).end(); //BAD REQUEST
+      return res.status(StatusCodes.BAD_REQUEST).end();
     }
     return res.status(StatusCodes.CREATED).json(results);
   });
 };
 
-const signIn = (res, req) => {};
+const signIn = (req, res) => {
+  const { email, password } = req.body;
+  let sql = "SELECT * FROM users WHERE email = ?";
+  conn.query(sql, email, (err, results) => {
+    if (err) {
+      console.log(err);
+      return res.status(StatusCodes.BAD_REQUEST).end();
+    }
 
-const findId = (res, req) => {};
+    const loginUser = results[0];
 
-const passwordResetRequest = (res, req) => {};
+    const hashPassword = crypto
+      .pbkdf2Sync(password, loginUser.salt, 10000, 64, "sha512")
+      .toString("base64");
 
-const passwordReset = (res, req) => {};
+    if (loginUser && loginUser.password == hashPassword) {
+      const token = jwt.sign(
+        {
+          email: loginUser.email,
+        },
+        process.env.PRIVATE_KEY,
+        {
+          expiresIn: "5m",
+          issuer: "kim",
+        }
+      );
+      //토큰 쿠키에 담기
+      res.cookie("token", token, {
+        httpOnly: true,
+      });
+      return res.status(StatusCodes.OK).json(results);
+    } else {
+      return res.status(StatusCodes.UNAUTHORIZED).end();
+    }
+  });
+};
+
+const findId = (req, res) => {};
+
+const passwordResetRequest = (req, res) => {
+  const { name, email, contact } = req.body;
+  let sql = "SELECT * FROM users WHERE name = ? AND email = ? AND contact = ?";
+
+  let values = [name, email, contact];
+  conn.query(sql, values, (err, results) => {
+    if (err) {
+      console.log(err);
+      return res.status(StatusCodes.BAD_REQUEST).end();
+    }
+
+    const user = results[0];
+
+    if (user) {
+      return res.status(StatusCodes.OK).json({
+        email: email,
+      });
+    } else {
+      return res.status(StatusCodes.UNAUTHORIZED).end();
+    }
+  });
+};
+
+const passwordReset = (req, res) => {
+  const { password, passwordConfirm, email } = req.body;
+
+  if (password !== passwordConfirm) {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      message: "비밀번호와 비밀번호 확인이 일치하지 않습니다.",
+    });
+  }
+
+  const salt = crypto.randomBytes(64).toString("base64");
+  const hashPassword = crypto
+    .pbkdf2Sync(password, salt, 10000, 64, "sha512")
+    .toString("base64");
+  let sql = "UPDATE users SET password = ?, salt = ? WHERE email =?";
+  let values = [hashPassword, salt, email];
+
+  conn.query(sql, values, (err, results) => {
+    if (err) {
+      console.log(err);
+      return res.status(StatusCodes.BAD_REQUEST).end();
+    }
+    if (results.affectedRows == 0) {
+      return res.status(StatusCodes.BAD_REQUEST).end();
+    } else {
+      return res.status(StatusCodes.OK).json(results);
+    }
+  });
+};
 
 module.exports = {
   signUp,
