@@ -64,11 +64,11 @@ const signIn = (req, res) => {
   });
 };
 
-const findId = (res, req) => {};
+const findId = (req, res) => {};
 
-const passwordResetRequest = (res, req) => {};
+const passwordResetRequest = (req, res) => {};
 
-const passwordReset = (res, req) => {};
+const passwordReset = (req, res) => {};
 
 module.exports = {
   signUp,
