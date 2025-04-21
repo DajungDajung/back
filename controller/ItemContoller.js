@@ -87,8 +87,8 @@ const getItemDetail = (req, res) =>{
     let sql = `
         SELECT 
             i.*,
-            u.name AS user_name,
-            u.image AS user_image,
+            u.nickname AS user_name,
+            u.img_id AS user_image,
             (SELECT COUNT(*) FROM likes l WHERE l.item_id = i.id) AS like
         FROM items i
         JOIN users u ON i.user_id = u.id

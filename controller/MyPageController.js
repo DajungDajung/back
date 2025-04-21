@@ -42,11 +42,11 @@ const getMyPage = (req, res) => {
 
 const updateMyPage = async (req, res) => {
     const conn = await mariadb.createConnection({
-        host:'127.0.0.1',
-        user: 'root',
-        password: 'root',
-        database: 'dajungdajung_project',
-        dateStrings: true
+        host: process.env.DB_HOST,
+        user: process.env.DB_USER,
+        password : process.env.DB_PASSWORD,
+        database: process.env.DB_NAME,
+        dateStrings : true
     });
 
     // 프로필 이미지 변경하면 어떡해야 할까? 1. 이미지 api를 따로 만들 것인지? 아님 이미지 먼저 저장한 후 update를 할 건지 2. 후자의 경우 url은?

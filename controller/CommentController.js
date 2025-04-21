@@ -3,13 +3,13 @@
 const conn = require('../mariadb');
 const {StatusCodes} = require('http-status-codes');
 
-const addLike = (req, res) => {
+const addComment = (req, res) => {
     const item_id = req.params.id;
-    const {user_id} = req.body;
+    const {user_id, contents} = req.body;
 
-    let sql = `INSERT INTO likes (item_id, user_id)
-                VALUES (?, ?)`;
-    let values = [item_id, user_id];
+    let sql = `INSERT INTO comments (item_id, user_id, contents)
+                VALUES (?, ?, ?)`;
+    let values = [item_id, user_id, contents];
     conn.query(sql, values,
         (err, results) => {
             if(err) {
@@ -22,13 +22,13 @@ const addLike = (req, res) => {
     )
 };
 
-const removeLike = (req, res) => {
-    const item_id = req.params.id;
+const removeComment = (req, res) => {
+    const commentId = req.params.id;
     const {user_id} = req.body;
 
-    let sql = `DELETE FROM likes
-                WHERE item_id = ? AND user_id = ?`;
-    let values = [item_id, user_id];
+    let sql = `DELETE FROM comments
+                WHERE id = ? AND user_id = ?`;
+    let values = [commentId, user_id];
     conn.query(sql, values,
         (err, results) => {
             if(err) {
@@ -39,14 +39,15 @@ const removeLike = (req, res) => {
             return res.status(StatusCodes.OK).json(results);
         }
     )
+    
 };
 
-const myLikeList = (req, res) => {
-    const {user_id} = req.body;
+const commentList = (req, res) => {
+    const item_id = req.params.id;
 
-    let sql = `SELECT * FROM likes
-                WHERE user_id = ?`;
-    conn.query(sql, user_id,
+    let sql = `SELECT * FROM comments
+                WHERE item_id = ?`;
+    conn.query(sql, item_id,
         (err, results) => {
             if(err) {
                 console.log(err);
@@ -65,10 +66,11 @@ const myLikeList = (req, res) => {
             }
         }
     )
+    
 };
 
 module.exports = {
-    addLike,
-    removeLike,
-    myLikeList
+    addComment,
+    removeComment,
+    commentList
 };
