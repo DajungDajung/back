@@ -11,13 +11,15 @@ app.listen(process.env.PORT);
 
 const itemRouter = require('./routes/items');
 const likeRouter = require('./routes/likes');
+const commentRouter = require('./routes/comments');
 const authRouter = require('./routes/auth');
 const MyPageRouter = require('./routes/myPage');
 
 app.use('/items', itemRouter);
-app.use('/likes', likeRouter);
-app.use('/users', authRouter);
-// app.use("/users", MyPageRouter);
+app.use('/users/likes', likeRouter);
+app.use('/comments', commentRouter);
+app.use('/auth', authRouter);
+app.use("/users", MyPageRouter);
 
 app.get('/',(req,res)=>{
     res.send('Hello World!');
