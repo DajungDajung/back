@@ -9,12 +9,12 @@ app.use(express.json());
 
 app.listen(process.env.PORT);
 
-const itemRouter = require('./routes/items');
-const likeRouter = require('./routes/likes');
-const commentRouter = require('./routes/comments');
-const authRouter = require('./routes/auth');
-const MyPageRouter = require('./routes/myPage');
-const StoreRouter = require('./routes/store');
+const itemRouter = require('./src/routes/items');
+const likeRouter = require('./src/routes/likes');
+const commentRouter = require('./src/routes/comments');
+const authRouter = require('./src/routes/auth');
+const MyPageRouter = require('./src/routes/myPage');
+const StoreRouter = require('./src/routes/store');
 
 app.use('/items', itemRouter);
 
