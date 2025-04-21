@@ -10,6 +10,5 @@ router.
         .put(updateMyPage);
 
 router.get('/token', getToken);
-router.get('/others', getUserInfo);
 
 module.exports = router;

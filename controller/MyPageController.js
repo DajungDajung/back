@@ -8,11 +8,6 @@ const jwtErrorhandler = require('../modules/auth/jwtErrorhandler');
 
 dotenv.config({path: __dirname + '/../.env'})
 
-// DELETE (URL 미정) → 좋아요 취소
-// GET /users/info/likes → 좋아요 조회
-// PUT /users/myPage → 유저 정보 수정
-// GET /users/myPage → 유저 정보 조회
-
 // 토큰을 발급받기 위한 임시 api 입니다
 const getToken = (req, res) => {
     const token = jwt.sign({
@@ -22,7 +17,6 @@ const getToken = (req, res) => {
 
     res.json({'token' : token});
 }
-
 
 const getMyPage = (req, res) => {
     const authorization = ensureAuthorization(req, res)
@@ -48,11 +42,11 @@ const getMyPage = (req, res) => {
 
 const updateMyPage = async (req, res) => {
     const conn = await mariadb.createConnection({
-        host:'127.0.0.1',
-        user: 'root',
-        password: 'root',
-        database: 'dajungdajung_project',
-        dateStrings: true
+        host: process.env.DB_HOST,
+        user: process.env.DB_USER,
+        password : process.env.DB_PASSWORD,
+        database: process.env.DB_NAME,
+        dateStrings : true
     });
 
     // 프로필 이미지 변경하면 어떡해야 할까? 1. 이미지 api를 따로 만들 것인지? 아님 이미지 먼저 저장한 후 update를 할 건지 2. 후자의 경우 url은?
@@ -65,9 +59,9 @@ const updateMyPage = async (req, res) => {
         return jwtErrorhandler(authorization, res); 
     }
 
-    const newUserData = req.body;
+    const newUserDatas = req.body;
 
-    if (!newUserData) {
+    if (!newUserDatas) {
         return res.status(StatusCodes.BAD_REQUEST).send("입력된 데이터가 없습니다.");
     }
 
@@ -80,16 +74,14 @@ const updateMyPage = async (req, res) => {
         return res.status(StatusCodes.NOT_FOUND).send("해당 ID의 사용자를 찾을 수 없습니다.");
     }
 
-    sql = 'UPDATE users SET img_id = ?, nickname = ?, email = ?, info = ?, contact = ?, password = ? WHERE id = ?';
-    const values = [
-        getNewValueOrDefault(newUserData.img_id, foundUser[0].img_id),
-        getNewValueOrDefault(newUserData.nickname, foundUser[0].nickname),
-        getNewValueOrDefault(newUserData.email, foundUser[0].email),
-        getNewValueOrDefault(newUserData.info, foundUser[0].info),
-        getNewValueOrDefault(newUserData.contact, foundUser[0].contact),
-        getNewValueOrDefault(newUserData.password, foundUser[0].password),
-        userId
-    ];
+    sql = 'UPDATE users SET nickname = ?, email = ?, info = ?, contact = ?, password = ? WHERE id = ?';
+    const values = [];
+
+    Object.keys(newUserDatas).forEach((key) => {
+        values.push(getNewValueOrDefault(newUserDatas[key], foundUser[0][key]))
+    });
+
+    values.push(userId);
 
     connection.query(sql, values, (err, results) => {
         if (err) {
@@ -97,19 +89,15 @@ const updateMyPage = async (req, res) => {
         }
 
         if (results.affectedRows == 0){
-            res.send("업데이트 실패");
+            return res.send("업데이트 실패");
         }
 
         return res.status(StatusCodes.OK).json(results);
     })
 }
 
-const getUserInfo = (req, res) => {
-    res.send("사용자 정보 조회입니다");
-}
-
 const getNewValueOrDefault = (newValue, defaultValue) => {
     return newValue !== undefined && newValue !== null && newValue !== '' ? newValue : defaultValue;
 }
 
-module.exports = {getMyPage, updateMyPage, getUserInfo, getToken};
+module.exports = {getMyPage, updateMyPage, getToken};

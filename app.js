@@ -1,4 +1,4 @@
-const express =require('express');
+const express = require('express');
 const app = express();
 
 const dotenv = require('dotenv');
@@ -14,12 +14,14 @@ const likeRouter = require('./routes/likes');
 const commentRouter = require('./routes/comments');
 const authRouter = require('./routes/auth');
 const MyPageRouter = require('./routes/myPage');
+const StoreRouter = require('./routes/store');
 
 app.use('/items', itemRouter);
-app.use('/users/likes', likeRouter);
+
 app.use('/comments', commentRouter);
 app.use('/auth', authRouter);
 app.use("/users", MyPageRouter);
+app.use('/store', StoreRouter);
 
 app.get('/',(req,res)=>{
     res.send('Hello World!');
