@@ -81,9 +81,7 @@ const passwordResetRequest = (req, res) => {
 
     if (user) {
       return res.status(StatusCodes.OK).json({
-        name: name,
         email: email,
-        contact: contact,
       });
     } else {
       return res.status(StatusCodes.UNAUTHORIZED).end();
