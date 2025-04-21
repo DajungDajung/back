@@ -6,7 +6,7 @@ const dotenv = require("dotenv"); //dotenv 모듈
 dotenv.config();
 
 //salt 처라허가가
-const signUp = (res, req) => {
+const signUp = (req, res) => {
   const { name, nickname, email, contact, password } = req.body;
   let sql =
     "INSERT INTO users (name, nickname, email, contact, password) VALUES (?,?,?,?,?)";
@@ -27,7 +27,7 @@ const signUp = (res, req) => {
   });
 };
 
-const signIn = (res, req) => {
+const signIn = (req, res) => {
   const { email, password } = req.body;
   let sql = "SELECT * FROM users WHERE email = ?";
   conn.query(sql, email, (err, results) => {
