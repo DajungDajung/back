@@ -16,18 +16,53 @@ const signUp = (res, req) => {
     .pbkdf2Sync(password, salt, 10000, 64, "sha512")
     .toString("base64");
 
-  let values = [name, nickname, email, contact, password];
+  let values = [name, nickname, email, contact, hashPassword];
 
   conn.query(sql, values, (err, results) => {
     if (err) {
       console.log(err);
-      return res.status(StatusCodes.BAD_REQUEST).end(); //BAD REQUEST
+      return res.status(StatusCodes.BAD_REQUEST).end();
     }
     return res.status(StatusCodes.CREATED).json(results);
   });
 };
 
-const signIn = (res, req) => {};
+const signIn = (res, req) => {
+  const { email, password } = req.body;
+  let sql = "SELECT * FROM users WHERE email = ?";
+  conn.query(sql, email, (err, results) => {
+    if (err) {
+      console.log(err);
+      return res.status(StatusCodes.BAD_REQUEST).end();
+    }
+
+    const loginUser = results[0];
+
+    const hashPassword = crypto
+      .pbkdf2Sync(password, loginUser.salt, 10000, 64, "sha512")
+      .toString("base64");
+
+    if (loginUser && loginUser.password == hashPassword) {
+      const token = jwt.sign(
+        {
+          email: loginUser.email,
+        },
+        process.env.PRIVATE_KEY,
+        {
+          expiresIn: "5m",
+          issuer: "kim",
+        }
+      );
+      //토큰 쿠키에 담기
+      res.cookie("token", token, {
+        httpOnly: true,
+      });
+      return res.status(StatusCodes.OK).json(results);
+    } else {
+      return res.status(StatusCodes.UNAUTHORIZED).end();
+    }
+  });
+};
 
 const findId = (res, req) => {};
 
