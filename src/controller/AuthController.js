@@ -5,18 +5,18 @@ const crypto = require("crypto"); //node.js 내장 모듈 암호화 모듈
 const dotenv = require("dotenv"); //dotenv 모듈
 dotenv.config();
 
-//salt 처라허가가
+//salt 처라허가
 const signUp = (req, res) => {
   const { name, nickname, email, contact, password } = req.body;
   let sql =
-    "INSERT INTO users (name, nickname, email, contact, password) VALUES (?,?,?,?,?)";
+    "INSERT INTO users (name, nickname, email, contact, password, salt) VALUES (?,?,?,?,?,?)";
 
   const salt = crypto.randomBytes(64).toString("base64"); //-> 토큰에 넣어서 적용
   const hashPassword = crypto
     .pbkdf2Sync(password, salt, 10000, 64, "sha512")
     .toString("base64");
 
-  let values = [name, nickname, email, contact, hashPassword];
+  let values = [name, nickname, email, contact, hashPassword, salt];
 
   conn.query(sql, values, (err, results) => {
     if (err) {
@@ -64,7 +64,26 @@ const signIn = (req, res) => {
   });
 };
 
-const findId = (req, res) => {};
+const findId = (req, res) => {
+  const { name, contact } = req.body;
+  const sql = "SELECT email FROM users WHERE name = ? AND contact = ?";
+  const values = [name, contact];
+  conn.query(sql, values, (err, results) => {
+    if (err) {
+      console.log(err);
+      return res.status(StatusCodes.BAD_REQUEST).end();
+    }
+
+    const user = results[0];
+    if (user) {
+      return res.status(StatusCodes.OK).json({
+        email: user.email,
+      });
+    } else {
+      return res.status(StatusCodes.NOT_FOUND).end();
+    }
+  });
+};
 
 const passwordResetRequest = (req, res) => {
   const { name, email, contact } = req.body;
