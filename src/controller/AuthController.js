@@ -30,6 +30,7 @@ const signUp = (req, res) => {
 const signIn = (req, res) => {
   const { email, password } = req.body;
   let sql = "SELECT * FROM users WHERE email = ?";
+
   conn.query(sql, email, (err, results) => {
     if (err) {
       console.log(err);
@@ -42,22 +43,48 @@ const signIn = (req, res) => {
       .pbkdf2Sync(password, loginUser.salt, 10000, 64, "sha512")
       .toString("base64");
 
-    if (loginUser && loginUser.password == hashPassword) {
-      const token = jwt.sign(
-        {
-          email: loginUser.email,
-        },
+    if (loginUser && loginUser.password === hashPassword) {
+      const accessToken = jwt.sign(
+        { email: loginUser.email },
         process.env.PRIVATE_KEY,
         {
           expiresIn: "5m",
           issuer: "kim",
         }
       );
-      //토큰 쿠키에 담기
-      res.cookie("token", token, {
-        httpOnly: true,
+
+      const refreshToken = jwt.sign(
+        { user_id: loginUser.id },
+        process.env.PRIVATE_KEY,
+        {
+          expiresIn: "14d",
+          issuer: "kim",
+        }
+      );
+
+      const tokenSql = `
+        INSERT INTO tokens (user_id, refresh_token, salt, created_at, expires_at)
+        VALUES (?, ?, ?, NOW(), DATE_ADD(NOW(), INTERVAL 14 DAY))
+          ON DUPLICATE KEY UPDATE
+          refresh_token = VALUES(refresh_token),
+          salt = VALUES(salt),
+          created_at = NOW(),
+          expires_at = DATE_ADD(NOW(), INTERVAL 14 DAY)
+      `;
+      const tokenValues = [loginUser.id, refreshToken, loginUser.salt];
+
+      conn.query(tokenSql, tokenValues, (err2) => {
+        if (err2) {
+          console.log(err2);
+          return res.status(StatusCodes.BAD_REQUEST).end(); //BAD REQUEST
+        }
+
+        res.cookie("token", accessToken, {
+          httpOnly: true,
+        });
+
+        return res.status(StatusCodes.OK).json(results);
       });
-      return res.status(StatusCodes.OK).json(results);
     } else {
       return res.status(StatusCodes.UNAUTHORIZED).end();
     }
