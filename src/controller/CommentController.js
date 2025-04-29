@@ -7,6 +7,8 @@ const addComment = (req, res) => {
   const item_id = req.params.id;
   const { contents } = req.body;
 
+  console.log(item_id, contents);
+
   let authorization = ensureAuthorization(req, res);
 
   if (authorization instanceof jwt.TokenExpiredError) {
@@ -20,7 +22,10 @@ const addComment = (req, res) => {
   } else {
     let sql = `INSERT INTO comments (item_id, user_id, contents)
       VALUES (?, ?, ?)`;
-    let values = [item_id, authorization.id, contents];
+    let values = [item_id, authorization.user_id, contents];
+
+    console.log(values)
+    
     conn.query(sql, values, (err, results) => {
       if (err) {
         console.log(err);
@@ -48,7 +53,7 @@ const removeComment = (req, res) => {
   } else {
     let sql = `DELETE FROM comments
                 WHERE id = ? AND user_id = ?`;
-    let values = [commentId, authorization.id];
+    let values = [commentId, authorization.user_id];
     conn.query(sql, values, (err, results) => {
       if (err) {
         console.log(err);

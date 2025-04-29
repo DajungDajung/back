@@ -8,16 +8,6 @@ const jwtErrorhandler = require('../modules/auth/jwtErrorhandler');
 
 dotenv.config({path: __dirname + '/../.env'})
 
-// 토큰을 발급받기 위한 임시 api 입니다
-const getToken = (req, res) => {
-    const token = jwt.sign({
-        id: 2,
-        mesesage:"임시 토큰입니다"
-    }, process.env.PRIVATE_KEY);
-
-    res.json({'token' : token});
-}
-
 const getMyPage = (req, res) => {
     const authorization = ensureAuthorization(req, res)
     
@@ -29,7 +19,7 @@ const getMyPage = (req, res) => {
     }
     
     const sql = 'SELECT id, img_id, nickname, created_at, info, email, contact from users WHERE id = ?';
-    const userId = authorization.id;
+    const userId = authorization.user_id;
 
     connection.query(sql, userId, (err, results) => {
         if (err) {
@@ -66,7 +56,7 @@ const updateMyPage = async (req, res) => {
     }
 
     let sql = 'SELECT * FROM users WHERE id = ? ';
-    const userId = authorization.id;
+    const userId = authorization.user_id;
 
     const [foundUser, fields] = await conn.query(sql, userId);
 
@@ -100,4 +90,4 @@ const getNewValueOrDefault = (newValue, defaultValue) => {
     return newValue !== undefined && newValue !== null && newValue !== '' ? newValue : defaultValue;
 }
 
-module.exports = {getMyPage, updateMyPage, getToken};
+module.exports = {getMyPage, updateMyPage};

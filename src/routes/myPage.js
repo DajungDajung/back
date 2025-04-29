@@ -9,6 +9,4 @@ router.
         .get(getMyPage)
         .put(updateMyPage);
 
-router.get('/token', getToken);
-
 module.exports = router;

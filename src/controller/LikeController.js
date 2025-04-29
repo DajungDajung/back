@@ -8,6 +8,8 @@ const addLike = (req, res) => {
 
   let authorization = ensureAuthorization(req, res);
 
+  console.log(authorization.user_id)
+
   if (authorization instanceof jwt.TokenExpiredError) {
     return res.status(StatusCodes.UNAUTHORIZED).json({
       message: "로그인 세션이 만료되었습니다. 다시 로그인하세요.",
@@ -19,7 +21,7 @@ const addLike = (req, res) => {
   } else {
     let sql = `INSERT INTO likes (item_id, user_id)
                 VALUES (?, ?)`;
-    let values = [item_id, authorization.id];
+    let values = [item_id, authorization.user_id];
     conn.query(sql, values, (err, results) => {
       if (err) {
         console.log(err);
@@ -47,7 +49,7 @@ const removeLike = (req, res) => {
   } else {
     let sql = `DELETE FROM likes
                 WHERE item_id = ? AND user_id = ?`;
-    let values = [item_id, authorization.id];
+    let values = [item_id, authorization.user_id];
     conn.query(sql, values, (err, results) => {
       if (err) {
         console.log(err);
@@ -74,7 +76,7 @@ const myLikeList = (req, res) => {
     let sql = `SELECT img_id, title, price, created_at FROM likes
                 LEFT JOIN items ON likes.item_id = items.id
                 WHERE likes.user_id = ?`;
-    conn.query(sql, authorization.id, (err, results) => {
+    conn.query(sql, authorization.user_id, (err, results) => {
       if (err) {
         console.log(err);
         return res.status(StatusCodes.BAD_REQUEST).end();
