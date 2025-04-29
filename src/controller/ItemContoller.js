@@ -1,9 +1,11 @@
 const {StatusCodes} = require('http-status-codes');
 const db = require('../mariadb.js');
+const ensureAuthorization = require('../modules/auth/ensureAuthorization.js');
 
 const checkItemSeller = (req, res, callback)=>{
     const item_id = req.params.id;
-    const user_id = checkCookies(req);
+    const user_Jwt = ensureAuthorization(req);
+    const user_id = user_Jwt.user_id;
     if (!user_id){
         return res.status(StatusCodes.UNAUTHORIZED).json({ message: "다시 로그인 해주세요"});
     }
@@ -23,13 +25,6 @@ const checkItemSeller = (req, res, callback)=>{
         }
         callback();
     });
-}
-
-const checkCookies = (req) =>{
-    if (req.cookies && req.cookies.user_id){
-        return parseInt(req.cookies.user_id);
-    }
-    return null
 }
 
 const getItems = (req, res) =>{
@@ -82,7 +77,8 @@ const getItemDetail = (req, res) =>{
     const item_id = req.params.id;
 
     // 쿠키 확인 후 user_id 빼오기, 나중에 이걸로 판매자 | 구매자를 구분해달라하면 그때 넣기
-    // const user_id = checkCookies(req);
+    const user_Jwt = ensureAuthorization(req);
+    const user_id = user_Jwt.user_id;
 
     let sql = `
         SELECT 
@@ -129,7 +125,8 @@ const postItem = (req, res) =>{
     const {title, category, price, contents} = req.body;
 
     // 쿠키 확인 후 user_id 빼오기
-    const user_id = checkCookies(req);
+    const user_Jwt = ensureAuthorization(req);
+    const user_id = user_Jwt.user_id;
 
     let sql = 'INSERT INTO items (category_id, user_id, title, price, contents, img_id) VALUES(?, ?, ?, ?, ?)';
     let values = [category, user_id, title, price, contents, category];
