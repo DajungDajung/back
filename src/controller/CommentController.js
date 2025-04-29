@@ -1,40 +1,63 @@
-// const ensureAuthorization = require('../auth');
-// const jwt = require('jsonwebtoken');
+const ensureAuthorization = require("../modules/auth/ensureAuthorization");
+const jwt = require("jsonwebtoken");
 const conn = require("../mariadb");
 const { StatusCodes } = require("http-status-codes");
 
 const addComment = (req, res) => {
   const item_id = req.params.id;
-  const { user_id, contents } = req.body;
+  const { contents } = req.body;
 
-  let sql = `INSERT INTO comments (item_id, user_id, contents)
-                VALUES (?, ?, ?)`;
-  let values = [item_id, user_id, contents];
-  conn.query(sql, values, (err, results) => {
-    if (err) {
-      console.log(err);
-      return res.status(StatusCodes.BAD_REQUEST).end();
-    }
+  let authorization = ensureAuthorization(req, res);
 
-    return res.status(StatusCodes.OK).json(results);
-  });
+  if (authorization instanceof jwt.TokenExpiredError) {
+    return res.status(StatusCodes.UNAUTHORIZED).json({
+      message: "로그인 세션이 만료되었습니다. 다시 로그인하세요.",
+    });
+  } else if (authorization instanceof jwt.JsonWebTokenError) {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      message: "잘못된 토큰입니다.",
+    });
+  } else {
+    let sql = `INSERT INTO comments (item_id, user_id, contents)
+      VALUES (?, ?, ?)`;
+    let values = [item_id, authorization.id, contents];
+    conn.query(sql, values, (err, results) => {
+      if (err) {
+        console.log(err);
+        return res.status(StatusCodes.BAD_REQUEST).end();
+      }
+
+      return res.status(StatusCodes.OK).json(results);
+    });
+  }
 };
 
 const removeComment = (req, res) => {
   const commentId = req.params.id;
-  const { user_id } = req.body;
 
-  let sql = `DELETE FROM comments
+  let authorization = ensureAuthorization(req, res);
+
+  if (authorization instanceof jwt.TokenExpiredError) {
+    return res.status(StatusCodes.UNAUTHORIZED).json({
+      message: "로그인 세션이 만료되었습니다. 다시 로그인하세요.",
+    });
+  } else if (authorization instanceof jwt.JsonWebTokenError) {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      message: "잘못된 토큰입니다.",
+    });
+  } else {
+    let sql = `DELETE FROM comments
                 WHERE id = ? AND user_id = ?`;
-  let values = [commentId, user_id];
-  conn.query(sql, values, (err, results) => {
-    if (err) {
-      console.log(err);
-      return res.status(StatusCodes.BAD_REQUEST).end();
-    }
+    let values = [commentId, authorization.id];
+    conn.query(sql, values, (err, results) => {
+      if (err) {
+        console.log(err);
+        return res.status(StatusCodes.BAD_REQUEST).end();
+      }
 
-    return res.status(StatusCodes.OK).json(results);
-  });
+      return res.status(StatusCodes.OK).json(results);
+    });
+  }
 };
 
 const commentList = (req, res) => {
