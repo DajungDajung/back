@@ -155,7 +155,7 @@ const postItem = (req, res) =>{
     const user_Jwt = ensureAuthorization(req);
     const user_id = user_Jwt.user_id;
 
-    let sql = 'INSERT INTO items (category_id, user_id, title, price, contents) VALUES(?, ?, ?, ?, ?)';
+    let sql = 'INSERT INTO items (img_id, category_id, user_id, title, price, contents) VALUES(1, ?, ?, ?, ?, ?)';
     let values = [category, user_id, title, price, contents];
     db.query(sql,values,(err, results)=>{
         if (err) {
