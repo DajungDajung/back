@@ -3,6 +3,7 @@ const app = express();
 
 const dotenv = require("dotenv");
 const connection = require("./src/mariadb");
+const {getRecentItems} = require("./src/controller/ItemContoller");
 dotenv.config();
 
 app.use(express.json());
@@ -23,6 +24,4 @@ app.use("/auth", authRouter);
 app.use("/users", MyPageRouter);
 app.use("/store", StoreRouter);
 
-app.get("/", (req, res) => {
-  res.send("Hello World!");
-});
+app.get("/", getRecentItems);

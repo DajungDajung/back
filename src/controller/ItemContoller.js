@@ -85,7 +85,7 @@ const getItemDetail = (req, res) =>{
             i.*,
             u.nickname AS user_name,
             u.img_id AS user_image,
-            (SELECT COUNT(*) FROM likes l WHERE l.item_id = i.id) AS like
+            (SELECT COUNT(*) FROM likes l WHERE l.item_id = i.id) AS likes
         FROM items i
         JOIN users u ON i.user_id = u.id
         WHERE i.id=?`;
@@ -106,7 +106,7 @@ const getItemDetail = (req, res) =>{
                     price: row.price,
                     create_at: row.created_at,
                     contents: row.contents,
-                    like: row.like,
+                    like: row.like || 0,
                     seller: row.user_name,
                     img_id: row.img_id
                 }, user: {
