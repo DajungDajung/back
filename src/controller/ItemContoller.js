@@ -113,13 +113,8 @@ const getItemDetail = (req, res) =>{
 
     let sql = `
         SELECT
-            i.id,
-            i.category_id,
+            i.*,
             c.category_name     AS category,
-            i.title,
-            i.price,
-            i.created_at,
-            i.contents,
             ( SELECT COUNT(*) FROM likes l WHERE l.item_id = i.id) AS likes,
             IF(
                 EXISTS(
