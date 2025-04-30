@@ -24,8 +24,8 @@ const addComment = (req, res) => {
       VALUES (?, ?, ?)`;
     let values = [item_id, authorization.user_id, contents];
 
-    console.log(values)
-    
+    console.log(values);
+
     conn.query(sql, values, (err, results) => {
       if (err) {
         console.log(err);
@@ -68,7 +68,7 @@ const removeComment = (req, res) => {
 const commentList = (req, res) => {
   const item_id = req.params.id;
 
-  let sql = `SELECT img_id, nickname, contents FROM comments
+  let sql = `SELECT img_id, nickname, contents, comments.created_at FROM comments
                 LEFT JOIN users ON comments.user_id = users.id
                 WHERE item_id = ?`;
   conn.query(sql, item_id, (err, results) => {
@@ -77,7 +77,7 @@ const commentList = (req, res) => {
       return res.status(StatusCodes.BAD_REQUEST).end();
     }
 
-    return res.status(StatusCodes.OK).json(results);
+    return res.status(StatusCodes.OK).json(results[0]);
   });
 };
 
