@@ -1,13 +1,17 @@
 const {StatusCodes} = require('http-status-codes');
 const db = require('../mariadb.js');
 const ensureAuthorization = require('../modules/auth/ensureAuthorization.js');
+const jwtErrorhandler = require('../modules/auth/jwtErrorhandler.js');
 
-const checkItemSeller = (req, res, callback)=>{
+const checkItemOwner = (req, res, callback)=>{
     const item_id = req.params.id;
-    const user_Jwt = ensureAuthorization(req);
-    const user_id = user_Jwt.user_id;
-    if (!user_id){
-        return res.status(StatusCodes.UNAUTHORIZED).json({ message: "다시 로그인 해주세요"});
+    const authorization = ensureAuthorization(req);
+    const user_id = authorization.user_id;
+    if (authorization instanceof ReferenceError) {
+        return res.status(StatusCodes.BAD_REQUEST).send("로그인이 필요합니다.");
+    }
+    else if (authorization instanceof Error){
+        return jwtErrorhandler(authorization, res); 
     }
 
     let sql = 'SELECT user_id FROM items WHERE id = ?';
@@ -104,19 +108,44 @@ const getItemDetail = (req, res) =>{
     const item_id = req.params.id;
 
     // 쿠키 확인 후 user_id 빼오기, 나중에 이걸로 판매자 | 구매자를 구분해달라하면 그때 넣기
-    const user_Jwt = ensureAuthorization(req);
-    const user_id = user_Jwt.user_id;
+    const authorization = ensureAuthorization(req);
+    let user_id = authorization.user_id ?? 0;
 
     let sql = `
-        SELECT 
-            i.*,
+        SELECT
+            i.id,
+            i.category_id,
+            c.category_name     AS category,
+            i.title,
+            i.price,
+            i.created_at,
+            i.contents,
+            ( SELECT COUNT(*) FROM likes l WHERE l.item_id = i.id) AS likes,
+            IF(
+                EXISTS(
+                    SELECT 1
+                    FROM likes l2
+                    WHERE l2.item_id = i.id
+                    AND l2.user_id = ?
+                ),
+                TRUE,
+                FALSE
+            )   AS liked,
+            IF(
+                    i.user_id = ?,
+                    TRUE,
+                    FALSE
+                ) AS is_seller,
             u.nickname AS user_name,
-            u.img_id AS user_image,
-            (SELECT COUNT(*) FROM likes l WHERE l.item_id = i.id) AS likes
-        FROM items i
-        JOIN users u ON i.user_id = u.id
-        WHERE i.id=?`;
-    let values = [item_id];
+            u.img_id AS user_image
+            FROM items i
+            JOIN users u
+            ON u.id = i.user_id
+            LEFT JOIN categories c
+            ON c.category_id = i.category_id
+            WHERE i.id = ?;
+`;
+    let values = [user_id,user_id,item_id];
 
     db.query(sql, values, (err, results)=>{
         if (err){
@@ -129,15 +158,17 @@ const getItemDetail = (req, res) =>{
                 item: {
                     id : row.id,
                     category_id: row.category_id,
+                    category: row.category,
                     title: row.title,
                     price: row.price,
                     create_at: row.created_at,
                     contents: row.contents,
                     like: row.likes,
-                    seller: row.user_name,
+                    liked: row.liked === 0 ? "false": "true",
+                    seller: row.is_seller === 0? "false":"ture",
                     img_id: row.img_id
                 }, user: {
-                    name: row.user_name,
+                    seller: row.user_name,
                     image: row.user_image
                 }
             };
@@ -155,8 +186,8 @@ const postItem = (req, res) =>{
     const user_Jwt = ensureAuthorization(req);
     const user_id = user_Jwt.user_id;
 
-    let sql = 'INSERT INTO items (img_id, category_id, user_id, title, price, contents) VALUES(1, ?, ?, ?, ?, ?)';
-    let values = [category, user_id, title, price, contents];
+    let sql = 'INSERT INTO items (img_id, category_id, user_id, title, price, contents) VALUES(?, ?, ?, ?, ?, ?)';
+    let values = [category, category, user_id, title, price, contents];
     db.query(sql,values,(err, results)=>{
         if (err) {
             console.log(err)
@@ -173,7 +204,7 @@ const postItem = (req, res) =>{
 
 const updateItem = (req,res) =>{
 
-    checkItemSeller(req,res, ()=>{
+    checkItemOwner(req,res, ()=>{
         const itme_id = req.params.id;
         const {title, category, price, contents} = req.body;
         let sql = 'UPDATE items SET category_id = ?, title = ?, price = ?, contents = ? WHERE id = ?';
@@ -196,7 +227,7 @@ const updateItem = (req,res) =>{
 
 const deleteItem = (req, res) =>{
 
-    checkItemSeller(req, res, ()=>{
+    checkItemOwner(req, res, ()=>{
         const item_id = req.params.id;
         const sql = 'DELETE FROM items WHERE id = ?';
         const values = [item_id];
