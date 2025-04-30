@@ -1,9 +1,17 @@
 const express = require("express");
 const app = express();
+const cors = require("cors");
+
+app.use(
+  cors({
+    origin: "http://localhost:3000",
+    credentials: true,
+  })
+);
 
 const dotenv = require("dotenv");
 const connection = require("./src/mariadb");
-const {getRecentItems} = require("./src/controller/ItemContoller");
+const { getRecentItems } = require("./src/controller/ItemContoller");
 dotenv.config();
 
 app.use(express.json());
