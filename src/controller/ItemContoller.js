@@ -27,21 +27,48 @@ const checkItemSeller = (req, res, callback)=>{
     });
 }
 
+const getRecentItems = (req,res)=>{
+    let startDate = new Date();
+    startDate.setMonth(startDate.getMonth()-1);
+
+    const sql = `SELECT 
+        id,
+        title,
+        price,
+        created_at
+    FROM items 
+    WHERE created_at BETWEEN ? AND NOW()
+    ORDER BY created_at DESC
+    LIMIT 0,10;`
+    const values = [startDate.toISOString().split('T')[0]];
+
+    db.query(sql, values, (err, results)=>{
+        if (err){
+            console.log(err);
+            return res.status(StatusCodes.BAD_REQUEST).end();
+        }
+        if(results[0])
+            return res.status(StatusCodes.OK).json(results);
+        else
+            return res.status(StatusCodes.NOT_FOUND).end();
+    })
+}
+
 const getItems = (req, res) =>{
-    const {q, category, limit, startDate, endDate, currentPage} = req.query;
+    const {q, category, startDate, endDate} = req.query;
+    let {limit=10, currentPage=1} = req.query;
 
     let sql = "SELECT id, title, price, created_at FROM items"
     let values = [];
     let filters = [];
 
-    // q, category=> 상품 검색, news => 몇일
     if(q) {
-        filters.push("title LIKE ?");
-        values.push(`%${q}%`);
+        filters.push("title LIKE (?)");
+        values.push('%'+q+'%');
     }
 
     if(category){
-        filters.push("category = ?");
+        filters.push("category_id = ?");
         values.push(category);
     }
 
@@ -57,7 +84,7 @@ const getItems = (req, res) =>{
         sql += " WHERE " + filters.join(" AND ");
     }
 
-    let offset = limit * (currentPage - 1);
+    let offset = limit * (currentPage -1);
     sql += " LIMIT ?,?";
     values.push(offset, parseInt(limit));
 
@@ -106,7 +133,7 @@ const getItemDetail = (req, res) =>{
                     price: row.price,
                     create_at: row.created_at,
                     contents: row.contents,
-                    like: row.like || 0,
+                    like: row.likes,
                     seller: row.user_name,
                     img_id: row.img_id
                 }, user: {
@@ -192,6 +219,7 @@ const deleteItem = (req, res) =>{
 
 module.exports = {
     getItems,
+    getRecentItems,
     getItemDetail,
     postItem,
     updateItem,
