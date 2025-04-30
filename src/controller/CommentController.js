@@ -7,8 +7,6 @@ const addComment = (req, res) => {
   const item_id = req.params.id;
   const { contents } = req.body;
 
-  console.log(item_id, contents);
-
   let authorization = ensureAuthorization(req, res);
 
   if (authorization instanceof jwt.TokenExpiredError) {
@@ -23,8 +21,6 @@ const addComment = (req, res) => {
     let sql = `INSERT INTO comments (item_id, user_id, contents)
       VALUES (?, ?, ?)`;
     let values = [item_id, authorization.user_id, contents];
-
-    console.log(values);
 
     conn.query(sql, values, (err, results) => {
       if (err) {
