@@ -8,8 +8,6 @@ const addLike = (req, res) => {
 
   let authorization = ensureAuthorization(req, res);
 
-  console.log(authorization.user_id)
-
   if (authorization instanceof jwt.TokenExpiredError) {
     return res.status(StatusCodes.UNAUTHORIZED).json({
       message: "로그인 세션이 만료되었습니다. 다시 로그인하세요.",
@@ -81,7 +79,7 @@ const myLikeList = (req, res) => {
         console.log(err);
         return res.status(StatusCodes.BAD_REQUEST).end();
       }
-      return res.status(StatusCodes.OK).json(results);
+      return res.status(StatusCodes.OK).json(results[0]);
     });
   }
 };
