@@ -3,6 +3,7 @@ const mariadb = require('mysql2/promise');
 const { StatusCodes } = require('http-status-codes');
 const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv');
+const crypto = require('crypto');
 const ensureAuthorization = require('../modules/auth/ensureAuthorization');
 const jwtErrorhandler = require('../modules/auth/jwtErrorhandler');
 
@@ -39,7 +40,6 @@ const updateMyPage = async (req, res) => {
         dateStrings : true
     });
 
-    // 프로필 이미지 변경하면 어떡해야 할까? 1. 이미지 api를 따로 만들 것인지? 아님 이미지 먼저 저장한 후 update를 할 건지 2. 후자의 경우 url은?
     const authorization = ensureAuthorization(req, res)
 
     if (authorization instanceof ReferenceError) {
@@ -63,15 +63,22 @@ const updateMyPage = async (req, res) => {
     if(!foundUser?.length)  {
         return res.status(StatusCodes.NOT_FOUND).send("해당 ID의 사용자를 찾을 수 없습니다.");
     }
-
-    sql = 'UPDATE users SET nickname = ?, email = ?, info = ?, contact = ?, password = ? WHERE id = ?';
+    
+    sql = 'UPDATE users SET nickname = ?, email = ?, info = ?, contact = ?, password = ?, salt = ? WHERE id = ?';
     const values = [];
 
-    Object.keys(newUserDatas).forEach((key) => {
-        values.push(getNewValueOrDefault(newUserDatas[key], foundUser[0][key]))
+    Object.keys(newUserDatas)
+    .filter((key) => key !== "password" && key !== "salt")
+    .forEach((key) => {
+        values.push(getNewValueOrDefault(newUserDatas[key], foundUser[0][key]));
     });
 
-    values.push(userId);
+    const salt = crypto.randomBytes(64).toString("base64");
+    let newPassword = crypto
+        .pbkdf2Sync(newUserDatas.password, salt, 10000, 64, "sha512")
+        .toString("base64");
+    
+    values.push(newPassword, salt, userId);
 
     connection.query(sql, values, (err, results) => {
         if (err) {
