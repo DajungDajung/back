@@ -11,7 +11,7 @@ app.use(
 
 const dotenv = require("dotenv");
 const connection = require("./src/mariadb");
-const { getRecentItems } = require("./src/controller/ItemContoller");
+const { getRecentItems } = require("./src/controller/ItemController");
 dotenv.config();
 
 app.use(express.json());

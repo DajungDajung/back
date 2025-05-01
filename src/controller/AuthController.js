@@ -48,7 +48,7 @@ const signIn = (req, res) => {
         { email: loginUser.email, user_id: loginUser.id},
         process.env.PRIVATE_KEY,
         {
-          expiresIn: "5m",
+          expiresIn: "15m",
           issuer: "kim",
         }
       );
