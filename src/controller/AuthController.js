@@ -79,8 +79,10 @@ const signIn = (req, res) => {
           return res.status(StatusCodes.BAD_REQUEST).end(); //BAD REQUEST
         }
 
-        res.cookie("token", accessToken, {
-          httpOnly: true,
+        res.cookie('token', accessToken, {
+          httpOnly: false,
+          secure: true,
+          sameSite: 'None',
         });
 
         return res.status(StatusCodes.OK).json(results);

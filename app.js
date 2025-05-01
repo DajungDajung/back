@@ -2,15 +2,18 @@ const express = require("express");
 const app = express();
 const cors = require("cors");
 
+const allowedOrigins = [
+  'http://localhost:5173',
+  'https://1aaf-222-232-138-33.ngrok-free.app',
+  'http://localhost:3000'
+];
+
 app.use(
   cors({
     origin: function (origin, callback) {
-      if (!origin) return callback(null, true);
-      if (
-        origin.startsWith("http://localhost:5173") ||
-        origin.endsWith(".ngrok-free.app")
-      ) {
-        return callback(null, true);
+      if (!origin) return callback(null, false);
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, origin);
       }
       return callback(new Error("Not allowed by CORS: " + origin));
     },
@@ -19,7 +22,6 @@ app.use(
 );
 
 const dotenv = require("dotenv");
-const connection = require("./src/mariadb");
 const { getRecentItems, getCategory } = require("./src/controller/ItemController");
 dotenv.config();
 
