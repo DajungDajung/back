@@ -12,8 +12,6 @@ router.route('/')
 router.route('/myitem')
     .get(checkAuthorization, getMyItems);
 
-router.route('/liked')
-    .get(checkAuthorization, getLikedItems);
 // 상품 상세 정보 조회 && 상품 수정 && 상품 삭제
 router.route('/:id')
     .get(getItemDetail)

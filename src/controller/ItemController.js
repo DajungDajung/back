@@ -99,35 +99,6 @@ const getMyItems = (req,res)=>{
     })
 }
 
-const getLikedItems = (req,res)=>{
-    const user_id = req.user.user_id;
-    // const user_id = ensureAuthorization(req,res).user_id;
-    const limit = parseInt(req.query.limit ?? 10, 10);
-    const currentPage = parseInt(req.query.currentPage ?? 1, 10);
-    const offset = limit * (currentPage - 1);
-
-    const sql =`
-    SELECT i.id, i.title, i.price, i.created_at
-    FROM items i
-    JOIN likes l ON l.item_id = i.id
-    WHERE l.user_id = ?
-    ORDER BY i.created_at DESC
-    LIMIT ?, ?
-    `;
-    const values = [user_id, offset, limit];
-
-    db.query(sql, values, (err, results)=>{
-        if (err){
-            console.log(err);
-            return res.status(StatusCodes.BAD_REQUEST).end();
-        }
-        if(results[0])
-            return res.status(StatusCodes.OK).json(results);
-        else
-            return res.status(StatusCodes.NOT_FOUND).end();
-    })
-}
-
 const getItemDetail = (req, res) =>{
     const item_id = req.params.id;
     const user_id = req.user.user_id;
@@ -263,7 +234,6 @@ module.exports = {
     getRecentItems,
     getItemDetail,
     getMyItems,
-    getLikedItems,
     postItem,
     updateItem,
     deleteItem
