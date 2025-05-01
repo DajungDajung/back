@@ -4,14 +4,23 @@ const cors = require("cors");
 
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: function (origin, callback) {
+      if (!origin) return callback(null, true);
+      if (
+        origin.startsWith("http://localhost:5173") ||
+        origin.endsWith(".ngrok-free.app")
+      ) {
+        return callback(null, true);
+      }
+      return callback(new Error("Not allowed by CORS: " + origin));
+    },
     credentials: true,
   })
 );
 
 const dotenv = require("dotenv");
 const connection = require("./src/mariadb");
-const { getRecentItems } = require("./src/controller/ItemController");
+const { getRecentItems, getCategory } = require("./src/controller/ItemController");
 dotenv.config();
 
 app.use(express.json());
@@ -31,5 +40,7 @@ app.use("/comments", commentRouter);
 app.use("/auth", authRouter);
 app.use("/users", MyPageRouter);
 app.use("/store", StoreRouter);
+app.use("/catagory",getCategory)
 
 app.get("/", getRecentItems);
+app.get("/favicon.ico",(req,res)=>res.sendStatus(204));

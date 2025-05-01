@@ -2,6 +2,17 @@ const {StatusCodes} = require('http-status-codes');
 const db = require('../mariadb.js');
 const ensureAuthorization = require('../modules/auth/ensureAuthorization.js');
 
+const getCategory = (req,res)=>{
+    const sql = 'SELECT category_id AS id, category_name AS category FROM categories';
+    db.query(sql, (err, results) => {
+    if (err) {
+        console.error(err);
+        return res.status(StatusCodes.BAD_REQUEST).json({ message: '카테고리 조회에 실패했습니다.' });
+    }
+    return res.status(StatusCodes.OK).json(results);
+    });
+};
+
 const getRecentItems = (req,res)=>{
     let startDate = new Date();
     startDate.setMonth(startDate.getMonth()-1);
@@ -101,7 +112,8 @@ const getMyItems = (req,res)=>{
 
 const getItemDetail = (req, res) =>{
     const item_id = req.params.id;
-    const user_id = req.user.user_id;
+    const user_id = req.user?.user_id ?? 0;
+
 
     let sql = `
         SELECT
@@ -236,5 +248,6 @@ module.exports = {
     getMyItems,
     postItem,
     updateItem,
-    deleteItem
+    deleteItem,
+    getCategory
 }
