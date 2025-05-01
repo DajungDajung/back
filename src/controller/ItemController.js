@@ -1,35 +1,17 @@
 const {StatusCodes} = require('http-status-codes');
 const db = require('../mariadb.js');
 const ensureAuthorization = require('../modules/auth/ensureAuthorization.js');
-const jwtErrorhandler = require('../modules/auth/jwtErrorhandler.js');
 
-const checkItemOwner = (req, res, callback)=>{
-    const item_id = req.params.id;
-    const authorization = ensureAuthorization(req);
-    const user_id = authorization.user_id;
-    if (authorization instanceof ReferenceError) {
-        return res.status(StatusCodes.BAD_REQUEST).send("로그인이 필요합니다.");
+const getCategory = (req,res)=>{
+    const sql = 'SELECT category_id AS id, category_name AS category FROM categories';
+    db.query(sql, (err, results) => {
+    if (err) {
+        console.error(err);
+        return res.status(StatusCodes.BAD_REQUEST).json({ message: '카테고리 조회에 실패했습니다.' });
     }
-    else if (authorization instanceof Error){
-        return jwtErrorhandler(authorization, res); 
-    }
-
-    let sql = 'SELECT user_id FROM items WHERE id = ?';
-    let values = [item_id];
-    db.query(sql, values, (err, results) => {
-        if (err) {
-            return res.status(StatusCodes.BAD_REQUEST).json({ message: "상품 삭제에 실패했습니다." });
-        }
-        if (results.length === 0) {
-            return res.status(StatusCodes.NOT_FOUND).json({message:"해당 상품이 존재하지 않습니다."});
-        }
-        const ownerId = results[0].user_id;
-        if (parseInt(user_id) !== ownerId) {
-            return res.status(StatusCodes.UNAUTHORIZED).json({ message: "해당 상품에 대한 삭제 권한이 없습니다." });
-        }
-        callback();
+    return res.status(StatusCodes.OK).json(results);
     });
-}
+};
 
 const getRecentItems = (req,res)=>{
     let startDate = new Date();
@@ -60,7 +42,9 @@ const getRecentItems = (req,res)=>{
 
 const getItems = (req, res) =>{
     const {q, category, startDate, endDate} = req.query;
-    let {limit=10, currentPage=1} = req.query;
+    const limit = parseInt(req.query.limit ?? 10, 10);
+    const currentPage = parseInt(req.query.currentPage ?? 1, 10);
+    const offset = limit * (currentPage - 1);
 
     let sql = "SELECT id, title, price, created_at FROM items"
     let values = [];
@@ -88,9 +72,8 @@ const getItems = (req, res) =>{
         sql += " WHERE " + filters.join(" AND ");
     }
 
-    let offset = limit * (currentPage -1);
     sql += " LIMIT ?,?";
-    values.push(offset, parseInt(limit));
+    values.push(offset,limit);
 
     db.query(sql, values, (err, results)=>{
         if (err){
@@ -104,12 +87,33 @@ const getItems = (req, res) =>{
     })
 }
 
+const getMyItems = (req,res)=>{
+
+    const user_id = req.user.user_id;
+    // const user_id = ensureAuthorization(req,res).user_id;
+    const limit = parseInt(req.query.limit ?? 10, 10);
+    const currentPage = parseInt(req.query.currentPage ?? 1, 10);
+    const offset = limit * (currentPage - 1);
+
+    const sql = "SELECT id, title, price, created_at FROM items WHERE items.user_id = ?  LIMIT ?,?";
+    const values = [user_id, offset, limit];
+
+    db.query(sql, values, (err, results)=>{
+        if (err){
+            console.log(err);
+            return res.status(StatusCodes.BAD_REQUEST).end();
+        }
+        if(results[0])
+            return res.status(StatusCodes.OK).json(results);
+        else
+            return res.status(StatusCodes.NOT_FOUND).json("등록한 상품이 없습니다");
+    })
+}
+
 const getItemDetail = (req, res) =>{
     const item_id = req.params.id;
+    const user_id = req.user?.user_id ?? 0;
 
-    // 쿠키 확인 후 user_id 빼오기, 나중에 이걸로 판매자 | 구매자를 구분해달라하면 그때 넣기
-    const authorization = ensureAuthorization(req);
-    let user_id = authorization.user_id ?? 0;
 
     let sql = `
         SELECT
@@ -177,9 +181,7 @@ const getItemDetail = (req, res) =>{
 const postItem = (req, res) =>{
     const {title, category, price, contents} = req.body;
 
-    // 쿠키 확인 후 user_id 빼오기
-    const user_Jwt = ensureAuthorization(req);
-    const user_id = user_Jwt.user_id;
+    const user_id = req.user.user_id;
 
     let sql = 'INSERT INTO items (img_id, category_id, user_id, title, price, contents) VALUES(?, ?, ?, ?, ?, ?)';
     let values = [category, category, user_id, title, price, contents];
@@ -199,47 +201,43 @@ const postItem = (req, res) =>{
 
 const updateItem = (req,res) =>{
 
-    checkItemOwner(req,res, ()=>{
-        const itme_id = req.params.id;
-        const {title, category, price, contents} = req.body;
-        let sql = 'UPDATE items SET category_id = ?, title = ?, price = ?, contents = ? WHERE id = ?';
-        let values = [category, title, price, contents, itme_id];
+    const itme_id = req.params.id;
+    const {title, category, price, contents} = req.body;
+    let sql = 'UPDATE items SET category_id = ?, title = ?, price = ?, contents = ? WHERE id = ?';
+    let values = [category, title, price, contents, itme_id];
 
-        db.query(sql,values,(err, results)=>{
-            if (err) {
-                console.log(err)
-                return res.status(StatusCodes.BAD_REQUEST).json({message:"상품 수정에 실패했습니다."})
-            }
-            
-            if (results.affectedRows){
-                console.log("상품 수정에 성공했습니다.");
-                return res.status(StatusCodes.CREATED).json(results);
-            }else
-                return res.status(StatusCodes.NOT_FOUND).json({ message: "상품 수정에 실패했습니다.." });
-        })
+    db.query(sql,values,(err, results)=>{
+        if (err) {
+            console.log(err)
+            return res.status(StatusCodes.BAD_REQUEST).json({message:"상품 수정에 실패했습니다."})
+        }
+        
+        if (results.affectedRows){
+            console.log("상품 수정에 성공했습니다.");
+            return res.status(StatusCodes.CREATED).json(results);
+        }else
+            return res.status(StatusCodes.NOT_FOUND).json({ message: "상품 수정에 실패했습니다.." });
     })
 }
 
 const deleteItem = (req, res) =>{
 
-    checkItemOwner(req, res, ()=>{
-        const item_id = req.params.id;
-        const sql = 'DELETE FROM items WHERE id = ?';
-        const values = [item_id];
+    const item_id = req.params.id;
+    let sql = 'DELETE FROM items WHERE id = ?';
+    let values = [item_id];
 
-        db.query(sql, values, (err, results) => {
-            if (err) {
-                console.log(err);
-                return res.status(StatusCodes.BAD_REQUEST).json({ message: "상품 삭제에 실패했습니다." });
-            }
-            
-            if (results.affectedRows > 0) {
-                console.log("상품 삭제에 성공했습니다.");
-                return res.status(StatusCodes.OK).json({ message: "상품 삭제에 성공했습니다." });
-            } else {
-                return res.status(StatusCodes.BAD_REQUEST).json({ message: "상품 삭제에 실패했습니다." });
-            }
-        });
+    db.query(sql, values, (err, results) => {
+        if (err) {
+            console.log(err);
+            return res.status(StatusCodes.BAD_REQUEST).json({ message: "상품 삭제에 실패했습니다." });
+        }
+        
+        if (results.affectedRows > 0) {
+            console.log("상품 삭제에 성공했습니다.");
+            return res.status(StatusCodes.OK).json({ message: "상품 삭제에 성공했습니다." });
+        } else {
+            return res.status(StatusCodes.BAD_REQUEST).json({ message: "상품 삭제에 실패했습니다." });
+        }
     });
 }
 
@@ -247,7 +245,9 @@ module.exports = {
     getItems,
     getRecentItems,
     getItemDetail,
+    getMyItems,
     postItem,
     updateItem,
-    deleteItem
+    deleteItem,
+    getCategory
 }

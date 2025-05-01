@@ -8,6 +8,7 @@ router.
     route('/mypage')
         .get(getMyPage)
         .put(updateMyPage)
-        .delete(deleteUser)
+        .delete(deleteUser);
+
 
 module.exports = router;
