@@ -113,8 +113,8 @@ const getMyItems = (req,res)=>{
 
 const getItemDetail = (req, res) =>{
     const item_id = req.params.id;
+    console.log(req.user)
     const user_id = req.user?.user_id ?? 0;
-
 
     let sql = `
         SELECT
