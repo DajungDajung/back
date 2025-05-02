@@ -19,13 +19,14 @@ const getRecentItems = (req,res)=>{
 
     const sql = `SELECT 
         id,
+        img_id,
         title,
         price,
         created_at
     FROM items 
     WHERE created_at BETWEEN ? AND NOW()
     ORDER BY created_at DESC
-    LIMIT 0,10;`
+    LIMIT 0,30;`
     const values = [startDate.toISOString().split('T')[0]];
 
     db.query(sql, values, (err, results)=>{
@@ -46,7 +47,7 @@ const getItems = (req, res) =>{
     const currentPage = parseInt(req.query.currentPage ?? 1, 10);
     const offset = limit * (currentPage - 1);
 
-    let sql = "SELECT id, title, price, created_at FROM items"
+    let sql = "SELECT id, img_id, title, price, created_at FROM items"
     let values = [];
     let filters = [];
 
@@ -95,7 +96,7 @@ const getMyItems = (req,res)=>{
     const currentPage = parseInt(req.query.currentPage ?? 1, 10);
     const offset = limit * (currentPage - 1);
 
-    const sql = "SELECT id, title, price, created_at FROM items WHERE items.user_id = ?  LIMIT ?,?";
+    const sql = "SELECT id, img_id, title, price, created_at FROM items WHERE items.user_id = ?  LIMIT ?,?";
     const values = [user_id, offset, limit];
 
     db.query(sql, values, (err, results)=>{
@@ -156,6 +157,7 @@ const getItemDetail = (req, res) =>{
             const item_init = {
                 item: {
                     id : row.id,
+                    img_id: row.img_id,
                     category_id: row.category_id,
                     category: row.category,
                     title: row.title,
@@ -164,8 +166,7 @@ const getItemDetail = (req, res) =>{
                     contents: row.contents,
                     like: row.likes,
                     liked: row.liked === 0 ? "false": "true",
-                    seller: row.is_seller === 0? "false":"ture",
-                    img_id: row.img_id
+                    seller: row.is_seller === 0? "false":"ture"
                 }, user: {
                     seller: row.user_name,
                     image: row.user_image
@@ -179,12 +180,11 @@ const getItemDetail = (req, res) =>{
 }
 
 const postItem = (req, res) =>{
-    const {title, category, price, contents} = req.body;
-
+    const {img_id, title, category, price, contents} = req.body;
     const user_id = req.user.user_id;
 
     let sql = 'INSERT INTO items (img_id, category_id, user_id, title, price, contents) VALUES(?, ?, ?, ?, ?, ?)';
-    let values = [category, category, user_id, title, price, contents];
+    let values = [img_id, category, user_id, title, price, contents];
     db.query(sql,values,(err, results)=>{
         if (err) {
             console.log(err)
@@ -202,9 +202,9 @@ const postItem = (req, res) =>{
 const updateItem = (req,res) =>{
 
     const itme_id = req.params.id;
-    const {title, category, price, contents} = req.body;
-    let sql = 'UPDATE items SET category_id = ?, title = ?, price = ?, contents = ? WHERE id = ?';
-    let values = [category, title, price, contents, itme_id];
+    const {img_id, title, category, price, contents} = req.body;
+    let sql = 'UPDATE items SET img_id=?, category_id = ?, title = ?, price = ?, contents = ? WHERE id = ?';
+    let values = [img_id, category, title, price, contents, itme_id];
 
     db.query(sql,values,(err, results)=>{
         if (err) {

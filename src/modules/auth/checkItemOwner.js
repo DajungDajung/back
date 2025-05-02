@@ -4,7 +4,6 @@ const db = require('../../mariadb');
 const checkItemOwner = (req, res, next)=>{
     const item_id = req.params.id;
     const user_Id = req.user.user_id;
-    console.log(user_id)
     
     let sql = 'SELECT user_id FROM items WHERE id = ?';
     let values = [item_id];
