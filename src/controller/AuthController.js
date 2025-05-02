@@ -38,12 +38,15 @@ const signIn = (req, res) => {
     }
 
     const loginUser = results[0];
+    if (!loginUser){
+      return res.status(StatusCodes.NOT_FOUND).end();
+    }
 
     const hashPassword = crypto
       .pbkdf2Sync(password, loginUser.salt, 10000, 64, "sha512")
       .toString("base64");
 
-    if (loginUser && loginUser.password === hashPassword) {
+    if (loginUser.password === hashPassword) {
       const accessToken = jwt.sign(
         { email: loginUser.email, user_id: loginUser.id},
         process.env.PRIVATE_KEY,
