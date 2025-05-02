@@ -107,7 +107,7 @@ const getMyItems = (req,res)=>{
         if(results[0])
             return res.status(StatusCodes.OK).json(results);
         else
-            return res.status(StatusCodes.NOT_FOUND).json("등록한 상품이 없습니다");
+            return res.status(StatusCodes.NOT_FOUND).end();
     })
 }
 

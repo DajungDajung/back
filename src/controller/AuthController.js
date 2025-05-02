@@ -51,7 +51,7 @@ const signIn = (req, res) => {
         { email: loginUser.email, user_id: loginUser.id},
         process.env.PRIVATE_KEY,
         {
-          expiresIn: "15m",
+          expiresIn: "30m",
           issuer: "kim",
         }
       );
@@ -83,11 +83,15 @@ const signIn = (req, res) => {
         }
 
         res.cookie('token', accessToken, {
-          httpOnly: false,
-          secure: true,
+          httpOnly: true,
+          secure: false,
           sameSite: 'None',
-        });
-
+        })
+        results = {
+          ...results[0],
+          token: accessToken
+        }
+        
         return res.status(StatusCodes.OK).json(results);
       });
     } else {

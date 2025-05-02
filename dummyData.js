@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const dotenv = require('dotenv');
 const { randomUUID } = require('crypto');
+const crypto = require("crypto");
 dotenv.config();
 
 // db연결
@@ -76,7 +77,38 @@ db.connect(err => {
 
 
     const users = [];
-    for (let i = 0; i < 20; i++) {
+    const password = "1q2w3e4r";
+    const salt = crypto.randomBytes(64).toString("base64"); //-> 토큰에 넣어서 적용
+    const hashPassword = crypto
+        .pbkdf2Sync(password, salt, 10000, 64, "sha512")
+        .toString("base64");
+    users.push({
+        img_id: 1,
+        password: hashPassword,
+        email: "aa@gmail.com",
+        contact: '01000000002',
+        name: "test1",
+        nickname: "test1",
+        info: faker.lorem.sentence(),
+        created_at: faker.date.between({from:startDate,to:endDate}),
+        salt: salt,
+    });
+    const salt1 = crypto.randomBytes(64).toString("base64"); //-> 토큰에 넣어서 적용
+    const hashPassword1 = crypto
+        .pbkdf2Sync(password, salt, 10000, 64, "sha512")
+        .toString("base64");
+        users.push({
+            img_id: 1,
+            password: hashPassword,
+            email: "bb@gmail.com",
+            contact: '01000000001',
+            name: "test2",
+            nickname: "test2",
+            info: faker.lorem.sentence(),
+            created_at: faker.date.between({from:startDate,to:endDate}),
+            salt: salt,
+        });
+    for (let i = 0; i < 18; i++) {
         const random8 = Math.floor(Math.random() * 100000000)
         .toString()
         .padStart(8, "0");
