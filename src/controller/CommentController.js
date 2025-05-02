@@ -73,7 +73,7 @@ const commentList = (req, res) => {
       return res.status(StatusCodes.BAD_REQUEST).end();
     }
 
-    return res.status(StatusCodes.OK).json(results[0]);
+    return res.status(StatusCodes.OK).json(results);
   });
 };
 

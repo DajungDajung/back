@@ -19,7 +19,7 @@ const getRecentItems = (req,res)=>{
 
     const sql = `SELECT 
         id,
-        img_id
+        img_id,
         title,
         price,
         created_at
