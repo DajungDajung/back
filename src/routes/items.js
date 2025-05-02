@@ -8,7 +8,7 @@ const checkItemOwner = require('../modules/auth/checkItemOwner.js');
 router.route('/')
     .get(getItems)
     .post(checkAuthorization, postItem);
-    
+
 router.route('/myitem')
     .get(checkAuthorization, getMyItems);
 

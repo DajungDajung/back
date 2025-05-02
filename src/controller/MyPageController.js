@@ -127,11 +127,11 @@ const deleteUser = async (req, res) => {
     try {
         sql = 'DELETE FROM tokens WHERE user_id = ?';
         const [deleteToken, tokenFields] = await conn.query(sql, userId);
-        console.log("토큰 삭제 완료", deleteToken.affectedRows);
+        // console.log("토큰 삭제 완료", deleteToken.affectedRows);
 
         sql = 'DELETE FROM users WHERE id = ?';
         const [deleteUser, userFields] = await conn.query(sql, userId);
-        console.log("사용자 삭제 완료", deleteUser.affectedRows);
+        // console.log("사용자 삭제 완료", deleteUser.affectedRows);
 
         if (deleteUser.affectedRows == 0 || deleteToken.affectedRows == 0){
             return res.status(StatusCodes.BAD_REQUEST).send("사용자 삭제에 실패하였습니다.");
