@@ -18,13 +18,11 @@ const db = mysql.createConnection({
 db.connect(err => {
 
     function maskPhone(phone) {
-        // 1) 숫자만 추출
         const digits = String(phone).replace(/[^0-9]/g, "");
         if (digits.length !== 11) {
             throw new Error("올바른 11자리 휴대폰 번호를 입력하세요");
         }
     
-        // 2) 정규식으로 앞 3자리(010)만 남기고 나머지는 ****로 치환
         return digits.replace(/(\d{3})(\d{4})(\d{4})/, "$1-$2-$3");
     }
 
@@ -52,6 +50,9 @@ db.connect(err => {
 
     const products = [];
 
+    // 이미지 추가!
+    const imgNames = ["default","digital", "furniture", "books","clothes","sports"]
+
     for (let i = 0; i < 100; i++) {
         const catName = categoryNames[Math.floor(Math.random() * categoryNames.length)];
         const catId = categoryMap[catName];
@@ -61,7 +62,7 @@ db.connect(err => {
         const contents = `${yearsUsed}년 사용했고 깨끗하게 잘 사용했습니다! 싸게 사가세요`;
 
         const product = {
-            img_id: 1,
+            img_id: catId+2,
             title: title,
             category_id: catId+1,
             user_id: Math.floor(Math.random() * 20)+1,
@@ -92,20 +93,6 @@ db.connect(err => {
         });
     }
 
-    /* 나중에 더미데이터를 크롤링해서 파일을 넣을려고 한다면..
-
-    const filePath = path.join(__dirname, 'products.json');
-    
-    fs.readFile(filePath, 'utf8', (err, data) => {
-        if (err) {
-            console.error('JSON 파일 읽기 에러:', err);
-            db.end();
-            return;
-        }
-        
-        try{ 
-    **/
-
     function generateLikes(userCount = 20, itemCount = 100, minLikes = 5) {
         const likes = [];
         for (let userId = 1; userId <= userCount; userId++) {
@@ -134,17 +121,20 @@ db.connect(err => {
     const sql = `
         SET FOREIGN_KEY_CHECKS = 0;
         TRUNCATE images;
+        TRUNCATE tokens;
         TRUNCATE categories;
         TRUNCATE users;
         TRUNCATE items;
         TRUNCATE likes;
-        INSERT INTO images (url) VALUES ('defaulte');
+        INSERT INTO images (url) VALUES ?;
         INSERT INTO categories (category_name) VALUES ?;
         INSERT INTO users (img_id, password, email, contact, name, nickname, info, created_at, salt) VALUES ?;
         INSERT INTO items (img_id, title, category_id, user_id, price, contents, created_at) VALUES ?;
         INSERT INTO likes (item_id, user_id) VALUES ?;
         SET FOREIGN_KEY_CHECKS = 1;
     `;
+
+    let imgArr = imgNames.map(value => [`https://placehold.co/600x400?text=${value}`]);
     const categoriesArr = categoryNames.map(name => [ name ]);  
 
     const usersArr = users.map(u => {
@@ -164,7 +154,7 @@ db.connect(err => {
         ];
     });
 
-    const values =[categoriesArr, usersArr , itemsArr,likesRows]
+    const values =[imgArr, categoriesArr, usersArr , itemsArr,likesRows]
 
     db.query(sql, values, (err, results)=>{
         if (err) console.log(err);
@@ -173,10 +163,4 @@ db.connect(err => {
             if (err) console.log(err)
         })
     })
-    /* 
-    } catch (err) {
-        console.log(err);
-        db.end();
-    }
-    **/
 })
