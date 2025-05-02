@@ -71,15 +71,16 @@ const myLikeList = (req, res) => {
       message: "잘못된 토큰입니다.",
     });
   } else {
+    console.log(authorization);
     let sql = `SELECT img_id, title, price, created_at FROM likes
                 LEFT JOIN items ON likes.item_id = items.id
                 WHERE likes.user_id = ?`;
-    conn.query(sql, authorization.user_id, (err, results) => {
+    conn.query(sql, [authorization.user_id], (err, results) => {
       if (err) {
         console.log(err);
         return res.status(StatusCodes.BAD_REQUEST).end();
       }
-      return res.status(StatusCodes.OK).json(results[0]);
+      return res.status(StatusCodes.OK).json(results);
     });
   }
 };
