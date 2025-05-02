@@ -64,8 +64,8 @@ const removeComment = (req, res) => {
 const commentList = (req, res) => {
   const item_id = req.params.id;
 
-  let sql = `SELECT img_id, nickname, contents, comments.created_at FROM comments
-                LEFT JOIN users ON comments.user_id = users.id
+  let sql = `SELECT c.id, u.img_id, u.nickname, c.contents, c.created_at FROM comments c
+                LEFT JOIN users u ON c.user_id = u.id
                 WHERE item_id = ?`;
   conn.query(sql, item_id, (err, results) => {
     if (err) {

@@ -71,7 +71,7 @@ const myLikeList = (req, res) => {
       message: "잘못된 토큰입니다.",
     });
   } else {
-    console.log(authorization);
+    // console.log(authorization);
     let sql = `SELECT id, img_id, title, price, created_at FROM likes
                 LEFT JOIN items ON likes.item_id = items.id
                 WHERE likes.user_id = ?`;
