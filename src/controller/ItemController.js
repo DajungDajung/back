@@ -1,6 +1,6 @@
 const {StatusCodes} = require('http-status-codes');
 const db = require('../mariadb.js');
-const ensureAuthorization = require('../modules/auth/ensureAuthorization.js');
+const path = require('path');
 
 const getCategory = (req,res)=>{
     const sql = 'SELECT category_id AS id, category_name AS category FROM categories';
@@ -19,7 +19,7 @@ const getRecentItems = (req,res)=>{
 
     const sql = `SELECT 
         id,
-        img_id,
+        (SELECT url FROM images WHERE id = img_id) AS img,
         title,
         price,
         created_at
@@ -47,7 +47,7 @@ const getItems = (req, res) =>{
     const currentPage = parseInt(req.query.currentPage ?? 1, 10);
     const offset = limit * (currentPage - 1);
 
-    let sql = "SELECT id, img_id, title, price, created_at FROM items"
+    let sql = "SELECT id, (SELECT url FROM images WHERE id = img_id) AS img, title, price, created_at FROM items"
     let values = [];
     let filters = [];
 
@@ -96,7 +96,7 @@ const getMyItems = (req,res)=>{
     const currentPage = parseInt(req.query.currentPage ?? 1, 10);
     const offset = limit * (currentPage - 1);
 
-    const sql = "SELECT id, img_id, title, price, created_at FROM items WHERE items.user_id = ?  LIMIT ?,?";
+    const sql = "SELECT id, (SELECT url FROM images WHERE id = img_id) AS img, title, price, created_at FROM items WHERE items.user_id = ?  LIMIT ?,?";
     const values = [user_id, offset, limit];
 
     db.query(sql, values, (err, results)=>{
@@ -118,6 +118,7 @@ const getItemDetail = (req, res) =>{
     let sql = `
         SELECT
             i.*,
+            (SELECT url FROM images WHERE id = i.img_id) AS img,
             c.category_name     AS category,
             ( SELECT COUNT(*) FROM likes l WHERE l.item_id = i.id) AS likes,
             IF(
@@ -156,7 +157,7 @@ const getItemDetail = (req, res) =>{
             const item_init = {
                 item: {
                     id : row.id,
-                    img_id: row.img_id,
+                    img: row.img,
                     category_id: row.category_id,
                     category: row.category,
                     title: row.title,
@@ -220,13 +221,51 @@ const updateItem = (req,res) =>{
 const deleteItem = (req, res) =>{
 
     const item_id = req.params.id;
-    let sql = 'DELETE FROM items WHERE id = ?';
+    let sql = 'SELECT img_id FROM items WHERE id = ?';
     let values = [item_id];
 
-    db.query(sql, values, (err, results) => {
+    db.query( sql, values, (err,results)=>{
+        if(err){
+            console.log(err);
+            return res.status(StatusCodes.BAD_REQUEST).json({message: "DB 오류로 상품을 찾지 못했습니다."});
+        }
+
+        if (rows.length === 0) {
+            return res.status(StatusCodes.NOT_FOUND).json({ message: "해당 아이템이 존재하지 않습니다." });
+        }
+
+        const img_id = rows[0].img_id;
+        if(!img_id){
+            return _deleteOnlyItme(item_id,res);
+        }
+
+        sql = 'SELECT url FROM images WHERE id = ?';
+        db.query(sql, [img_id], (err, results) => {
+            if (err) {
+                console.log(err);
+                return res.status(StatusCodes.BAD_REQUEST).json({ message: "DB 오류로 이미지를 찾을 수 없습니다." });
+            }
+            
+            if (imgRows.length > 0) {
+                const fileUrl = imgRows[0].url;
+                const filename = path.basename(fileUrl);
+                const filepath = path.join(__dirname, '../uploads', filename);
+
+                fs.unlink(filepath, unlinkErr => {
+                if (unlinkErr) console.error("파일 삭제 실패:", unlinkErr);
+                });
+            }
+        });
+        return _deleteOnlyItme(item_id, res);
+    })
+}
+
+const _deleteOnlyItme = (item_id, res) => {
+    const sql = "DELETE FROM items WHERE id = ?"
+    db.query(sql, [item_id], (err,results)=>{
         if (err) {
             console.log(err);
-            return res.status(StatusCodes.BAD_REQUEST).json({ message: "상품 삭제에 실패했습니다." });
+            return res.status(StatusCodes.BAD_REQUEST).json({ message: "DB 오류로 상품 삭제에 실패했습니다." });
         }
         
         if (results.affectedRows > 0) {

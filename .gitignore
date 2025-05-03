@@ -170,4 +170,6 @@ src/dummyData.js
 src/dummyDataList.json
 package-lock.json
 
+uploads/
+
 # End of https://www.toptal.com/developers/gitignore/api/visualstudiocode,node,dotenv

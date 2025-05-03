@@ -72,7 +72,7 @@ const myLikeList = (req, res) => {
     });
   } else {
     // console.log(authorization);
-    let sql = `SELECT id, img_id, title, price, created_at FROM likes
+    let sql = `SELECT id, (SELECT url FROM images WHERE id = img_id) AS img, title, price, created_at FROM likes
                 LEFT JOIN items ON likes.item_id = items.id
                 WHERE likes.user_id = ?`;
     conn.query(sql, [authorization.user_id], (err, results) => {

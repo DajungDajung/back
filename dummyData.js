@@ -24,7 +24,7 @@ db.connect(err => {
             throw new Error("올바른 11자리 휴대폰 번호를 입력하세요");
         }
     
-        return digits.replace(/(\d{3})(\d{4})(\d{4})/, "$1-$2-$3");
+        return digits.replace(/(\d{11})/, "$1");
     }
 
     if (err) {
@@ -77,51 +77,57 @@ db.connect(err => {
 
 
     const users = [];
-    const password = "1q2w3e4r";
-    const salt = crypto.randomBytes(64).toString("base64"); //-> 토큰에 넣어서 적용
-    const hashPassword = crypto
+    let password = "1q2w3e4r";
+    let salt = crypto.randomBytes(64).toString("base64"); //-> 토큰에 넣어서 적용
+    let hashPassword = crypto
         .pbkdf2Sync(password, salt, 10000, 64, "sha512")
         .toString("base64");
     users.push({
         img_id: 1,
         password: hashPassword,
         email: "aa@gmail.com",
-        contact: '01000000002',
+        contact: '01000000001',
         name: "test1",
         nickname: "test1",
-        info: faker.lorem.sentence(),
-        created_at: faker.date.between({from:startDate,to:endDate}),
+        info: "테스트용으로 생성된 첫번째 admin계정입니다.",
+        created_at: startDate,
         salt: salt,
     });
-    const salt1 = crypto.randomBytes(64).toString("base64"); //-> 토큰에 넣어서 적용
-    const hashPassword1 = crypto
+    password = "1234qwer";
+    salt = crypto.randomBytes(64).toString("base64"); //-> 토큰에 넣어서 적용
+    hashPassword = crypto
         .pbkdf2Sync(password, salt, 10000, 64, "sha512")
         .toString("base64");
-        users.push({
-            img_id: 1,
-            password: hashPassword,
-            email: "bb@gmail.com",
-            contact: '01000000001',
-            name: "test2",
-            nickname: "test2",
-            info: faker.lorem.sentence(),
-            created_at: faker.date.between({from:startDate,to:endDate}),
-            salt: salt,
-        });
+    users.push({
+        img_id: 1,
+        password: hashPassword,
+        email: "bb@gmail.com",
+        contact: '01000000002',
+        name: "test2",
+        nickname: "test2",
+        info: "테스트용으로 생성된 두번째 admin계정입니다.",
+        created_at: startDate,
+        salt: salt,
+    });
     for (let i = 0; i < 18; i++) {
         const random8 = Math.floor(Math.random() * 100000000)
         .toString()
         .padStart(8, "0");
+        password = Math.random().toString(36).substr(2);
+        salt = crypto.randomBytes(64).toString("base64"); //-> 토큰에 넣어서 적용
+        hashPassword = crypto
+            .pbkdf2Sync(password, salt, 10000, 64, "sha512")
+            .toString("base64");
         users.push({
             img_id: 1,
-            password: faker.internet.password(8),
+            password: hashPassword,
             email: faker.internet.email(),
             contact: maskPhone(`010${random8}`),
             name: faker.person.fullName(),
             nickname: faker.internet.username(),
             info: faker.lorem.sentence(),
             created_at: faker.date.between({from:startDate,to:endDate}),
-            salt: randomUUID(),
+            salt: salt,
         });
     }
 
@@ -158,11 +164,13 @@ db.connect(err => {
         TRUNCATE users;
         TRUNCATE items;
         TRUNCATE likes;
+        TRUNCATE comments;
         INSERT INTO images (url) VALUES ?;
         INSERT INTO categories (category_name) VALUES ?;
         INSERT INTO users (img_id, password, email, contact, name, nickname, info, created_at, salt) VALUES ?;
         INSERT INTO items (img_id, title, category_id, user_id, price, contents, created_at) VALUES ?;
         INSERT INTO likes (item_id, user_id) VALUES ?;
+        INSERT INTO comments (item_id, user_id, contents) VALUES ?;
         SET FOREIGN_KEY_CHECKS = 1;
     `;
 
@@ -186,7 +194,9 @@ db.connect(err => {
         ];
     });
 
-    const values =[imgArr, categoriesArr, usersArr , itemsArr,likesRows]
+    const commentArr = Array.from({ length: 100 }, (_, i) => [i + 1, (i%20) + 1, `test${i + 1}`]);
+
+    const values =[imgArr, categoriesArr, usersArr , itemsArr,likesRows,commentArr]
 
     db.query(sql, values, (err, results)=>{
         if (err) console.log(err);
