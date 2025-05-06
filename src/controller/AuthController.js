@@ -40,7 +40,7 @@ const signIn = (req, res) => {
     }
     
     const loginUser = results[0];
-    if (!loginUser){
+    if (!loginUser) {
       return res.status(StatusCodes.NOT_FOUND).end();
     } else {
 
