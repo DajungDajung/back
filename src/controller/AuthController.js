@@ -36,7 +36,7 @@ const signIn = (req, res) => {
       console.log(err);
       return res.status(StatusCodes.BAD_REQUEST).end();
     }
-
+    
     const loginUser = results[0];
     if (!loginUser){
       return res.status(StatusCodes.NOT_FOUND).end();
@@ -83,10 +83,11 @@ const signIn = (req, res) => {
         }
 
         res.cookie('token', accessToken, {
-          httpOnly: true,
-          secure: false,
+          httpOnly: false,
+          secure: true,
           sameSite: 'None',
-        })
+          domain: 'b292-222-232-138-33.ngrok-free.app'
+        });
         results = {
           ...results[0],
           token: accessToken

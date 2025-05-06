@@ -2,10 +2,11 @@ const jwt = require('jsonwebtoken');
 const { StatusCodes } = require('http-status-codes');
 const dotenv = require('dotenv');
 const handleTokenError = require('./jwtErrorhandler');
+const parseCookies = require('./parseCookies');
 dotenv.config();
 
 const checkAuthorization = (req, res, next)=>{
-    const token = req.headers['authorization'];
+    const token = parseCookies(req.headers.cookie).token;
     if (!token) {
         return res.status(StatusCodes.UNAUTHORIZED).send("로그인이 필요합니다.");
     }

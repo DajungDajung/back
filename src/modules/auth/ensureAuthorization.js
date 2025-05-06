@@ -1,10 +1,13 @@
 const jwt = require('jsonwebtoken');
 const dotenv = require('dotenv');  // dotenv 모듈
+const parseCookies = require('./parseCookies');
 dotenv.config();
 
 const ensureAuthorization = (req, res) => {
     try {
-        const receivedjwt = req.headers['authorization'];
+        const cookies = parseCookies(req.headers.cookie);
+        const receivedjwt = cookies.token;
+        
         if(receivedjwt) {
             const decodedjwt = jwt.verify(receivedjwt, process.env.PRIVATE_KEY);
             return decodedjwt;
