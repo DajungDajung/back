@@ -38,7 +38,7 @@ const signIn = (req, res) => {
     }
 
     const loginUser = results[0];
-    if (!loginUser){
+    if (!loginUser) {
       return res.status(StatusCodes.NOT_FOUND).end();
     }
 
@@ -48,7 +48,7 @@ const signIn = (req, res) => {
 
     if (loginUser.password === hashPassword) {
       const accessToken = jwt.sign(
-        { email: loginUser.email, user_id: loginUser.id},
+        { email: loginUser.email, user_id: loginUser.id },
         process.env.PRIVATE_KEY,
         {
           expiresIn: "15m",
@@ -82,10 +82,8 @@ const signIn = (req, res) => {
           return res.status(StatusCodes.BAD_REQUEST).end(); //BAD REQUEST
         }
 
-        res.cookie('token', accessToken, {
-          httpOnly: false,
-          secure: true,
-          sameSite: 'None',
+        res.cookie("token", accessToken, {
+          httpOnly: true,
         });
 
         return res.status(StatusCodes.OK).json(results);
