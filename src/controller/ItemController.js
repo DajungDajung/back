@@ -107,14 +107,13 @@ const getMyItems = (req,res)=>{
         if(results[0])
             return res.status(StatusCodes.OK).json(results);
         else
-            return res.status(StatusCodes.NOT_FOUND).json("등록한 상품이 없습니다");
+            return res.status(StatusCodes.NOT_FOUND).end();
     })
 }
 
 const getItemDetail = (req, res) =>{
     const item_id = req.params.id;
     const user_id = req.user?.user_id ?? 0;
-
 
     let sql = `
         SELECT
@@ -192,7 +191,6 @@ const postItem = (req, res) =>{
         }
         
         if (results.affectedRows){
-            console.log("상품 등록에 성공했습니다.");
             return res.status(StatusCodes.CREATED).json(results);
         }else
             return res.status(StatusCodes.BAD_REQUEST).json({ message: "상품 등록에 실패했습니다. 입력 값을 확인하세요." });
@@ -213,7 +211,6 @@ const updateItem = (req,res) =>{
         }
         
         if (results.affectedRows){
-            console.log("상품 수정에 성공했습니다.");
             return res.status(StatusCodes.CREATED).json(results);
         }else
             return res.status(StatusCodes.NOT_FOUND).json({ message: "상품 수정에 실패했습니다.." });
@@ -233,7 +230,6 @@ const deleteItem = (req, res) =>{
         }
         
         if (results.affectedRows > 0) {
-            console.log("상품 삭제에 성공했습니다.");
             return res.status(StatusCodes.OK).json({ message: "상품 삭제에 성공했습니다." });
         } else {
             return res.status(StatusCodes.BAD_REQUEST).json({ message: "상품 삭제에 실패했습니다." });

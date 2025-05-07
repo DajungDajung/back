@@ -3,6 +3,7 @@ const conn = require("../mariadb"); //db 연결
 const jwt = require("jsonwebtoken"); //jwt 모듈
 const crypto = require("crypto"); //node.js 내장 모듈 암호화 모듈
 const dotenv = require("dotenv"); //dotenv 모듈
+const ensureAuthorization = require("../modules/auth/ensureAuthorization");
 dotenv.config();
 
 //salt 처라허가
@@ -30,66 +31,76 @@ const signUp = (req, res) => {
 const signIn = (req, res) => {
   const { email, password } = req.body;
   let sql = "SELECT * FROM users WHERE email = ?";
+  console.log(email, password)
 
   conn.query(sql, email, (err, results) => {
     if (err) {
       console.log(err);
       return res.status(StatusCodes.BAD_REQUEST).end();
     }
-
+    
     const loginUser = results[0];
     if (!loginUser) {
       return res.status(StatusCodes.NOT_FOUND).end();
-    }
-
-    const hashPassword = crypto
-      .pbkdf2Sync(password, loginUser.salt, 10000, 64, "sha512")
-      .toString("base64");
-
-    if (loginUser.password === hashPassword) {
-      const accessToken = jwt.sign(
-        { email: loginUser.email, user_id: loginUser.id },
-        process.env.PRIVATE_KEY,
-        {
-          expiresIn: "15m",
-          issuer: "kim",
-        }
-      );
-
-      const refreshToken = jwt.sign(
-        { user_id: loginUser.id },
-        process.env.PRIVATE_KEY,
-        {
-          expiresIn: "14d",
-          issuer: "kim",
-        }
-      );
-
-      const tokenSql = `
-        INSERT INTO tokens (user_id, refresh_token, salt, created_at, expires_at)
-        VALUES (?, ?, ?, NOW(), DATE_ADD(NOW(), INTERVAL 14 DAY))
-          ON DUPLICATE KEY UPDATE
-          refresh_token = VALUES(refresh_token),
-          salt = VALUES(salt),
-          created_at = NOW(),
-          expires_at = DATE_ADD(NOW(), INTERVAL 14 DAY)
-      `;
-      const tokenValues = [loginUser.id, refreshToken, loginUser.salt];
-
-      conn.query(tokenSql, tokenValues, (err2) => {
-        if (err2) {
-          console.log(err2);
-          return res.status(StatusCodes.BAD_REQUEST).end(); //BAD REQUEST
-        }
-
-        res.cookie("token", accessToken, {
-          httpOnly: true,
-        });
-
-        return res.status(StatusCodes.OK).json(results);
-      });
     } else {
-      return res.status(StatusCodes.UNAUTHORIZED).end();
+
+      const hashPassword = crypto
+        .pbkdf2Sync(password, loginUser.salt, 10000, 64, "sha512")
+        .toString("base64");
+
+      if (loginUser.password === hashPassword) {
+        const accessToken = jwt.sign(
+          { email: loginUser.email, user_id: loginUser.id},
+          process.env.PRIVATE_KEY,
+          {
+            expiresIn: "30m",
+            issuer: "kim",
+          }
+        );
+
+        const refreshToken = jwt.sign(
+          { user_id: loginUser.id },
+          process.env.PRIVATE_KEY,
+          {
+            expiresIn: "14d",
+            issuer: "kim",
+          }
+        );
+
+        const tokenSql = `
+          INSERT INTO tokens (user_id, refresh_token, salt, created_at, expires_at)
+          VALUES (?, ?, ?, NOW(), DATE_ADD(NOW(), INTERVAL 14 DAY))
+            ON DUPLICATE KEY UPDATE
+            refresh_token = VALUES(refresh_token),
+            salt = VALUES(salt),
+            created_at = NOW(),
+            expires_at = DATE_ADD(NOW(), INTERVAL 14 DAY)
+        `;
+        const tokenValues = [loginUser.id, refreshToken, loginUser.salt];
+
+        conn.query(tokenSql, tokenValues, (err2) => {
+          if (err2) {
+            console.log(err2);
+            return res.status(StatusCodes.BAD_REQUEST).end(); //BAD REQUEST
+          }
+
+          res.cookie('token', accessToken, {
+            httpOnly: true
+          });
+          results = {
+            ...results[0],
+            token: accessToken
+          }
+          
+          return res.status(StatusCodes.OK).json(results);
+        });
+      } else {
+        res.setHeader(
+          "Set-Cookie",
+          "token=; Max-Age=0; Path=/; Domain=b292-222-232-138-33.ngrok-free.app; SameSite=None; Secure; HttpOnly"
+        );
+        return res.status(StatusCodes.UNAUTHORIZED).end();
+      }
     }
   });
 };
@@ -167,10 +178,35 @@ const passwordReset = (req, res) => {
   });
 };
 
+const logout = (req,res) =>{
+  const jwt = ensureAuthorization(req, res);
+  const user_id = jwt.user_id;
+
+  const sql = "DELETE FROM tokens WHERE user_id = ?";
+
+  conn.query(sql, [user_id], (err, results) => {
+    if (err) {
+      console.log(err);
+      return res.status(StatusCodes.BAD_GATEWAY).end();
+    }
+    if (results.affectedRows == 0) {
+      return res.status(StatusCodes.BAD_REQUEST).end();
+    }
+  });
+
+  res.setHeader(
+    "Set-Cookie",
+    "token=; Max-Age=0; Path=/; Domain=b292-222-232-138-33.ngrok-free.app; SameSite=None; Secure; HttpOnly"
+  );
+
+  return res.status(StatusCodes.OK).end();
+}
+
 module.exports = {
   signUp,
   signIn,
   findId,
   passwordResetRequest,
   passwordReset,
+  logout,
 };

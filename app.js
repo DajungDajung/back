@@ -42,7 +42,7 @@ app.use("/comments", commentRouter);
 app.use("/auth", authRouter);
 app.use("/users", MyPageRouter);
 app.use("/store", StoreRouter);
-app.use("/catagory",getCategory)
+app.use("/category",getCategory)
 
 app.get("/", getRecentItems);
 app.get("/favicon.ico",(req,res)=>res.sendStatus(204));

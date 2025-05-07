@@ -8,13 +8,13 @@ const checkItemOwner = require('../modules/auth/checkItemOwner.js');
 router.route('/')
     .get(getItems)
     .post(checkAuthorization, postItem);
-    
+
 router.route('/myitem')
     .get(checkAuthorization, getMyItems);
 
 // 상품 상세 정보 조회 && 상품 수정 && 상품 삭제
 router.route(`/:id(\\d+)`)
-    .get(getItemDetail)
+    .get(checkAuthorization, getItemDetail)
     .put(checkAuthorization, checkItemOwner, updateItem)
     .delete(checkAuthorization, checkItemOwner, deleteItem);
 
