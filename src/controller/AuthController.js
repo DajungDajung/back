@@ -37,7 +37,7 @@ const signIn = (req, res) => {
       console.log(err);
       return res.status(StatusCodes.BAD_REQUEST).end();
     }
-    
+
     const loginUser = results[0];
     if (!loginUser) {
       return res.status(StatusCodes.NOT_FOUND).end();
@@ -89,7 +89,7 @@ const signIn = (req, res) => {
         httpOnly: false,
         secure: true,
         sameSite: "None",
-        domain: 'c247-222-232-138-33.ngrok-free.app'
+        domain: `${process.env.DOMAIN}`
       });
       
       return res.status(StatusCodes.OK).json(results);
@@ -170,7 +170,7 @@ const passwordReset = (req, res) => {
   });
 };
 
-const logout = (req,res) =>{
+const logout = (req, res) => {
   const jwt = ensureAuthorization(req, res);
   const user_id = jwt.user_id;
 
@@ -194,7 +194,7 @@ const logout = (req,res) =>{
   });
 
   return res.status(StatusCodes.OK).end();
-}
+};
 
 module.exports = {
   signUp,
