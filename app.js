@@ -3,9 +3,9 @@ const app = express();
 const cors = require("cors");
 
 const allowedOrigins = [
-  'http://localhost:5173',
-  'https://1aaf-222-232-138-33.ngrok-free.app',
-  'http://localhost:3000'
+  "http://localhost:5173",
+  "https://afe5-58-77-32-216.ngrok-free.app",
+  "http://localhost:3000",
 ];
 
 app.use(
@@ -22,7 +22,10 @@ app.use(
 );
 
 const dotenv = require("dotenv");
-const { getRecentItems, getCategory } = require("./src/controller/ItemController");
+const {
+  getRecentItems,
+  getCategory,
+} = require("./src/controller/ItemController");
 dotenv.config();
 
 app.use(express.json());
@@ -42,7 +45,7 @@ app.use("/comments", commentRouter);
 app.use("/auth", authRouter);
 app.use("/users", MyPageRouter);
 app.use("/store", StoreRouter);
-app.use("/category",getCategory)
+app.use("/category", getCategory);
 
 app.get("/", getRecentItems);
-app.get("/favicon.ico",(req,res)=>res.sendStatus(204));
+app.get("/favicon.ico", (req, res) => res.sendStatus(204));
