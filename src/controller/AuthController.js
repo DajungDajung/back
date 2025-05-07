@@ -31,26 +31,25 @@ const signUp = (req, res) => {
 const signIn = (req, res) => {
   const { email, password } = req.body;
   let sql = "SELECT * FROM users WHERE email = ?";
-  console.log(email, password)
+  console.log(email, password);
 
   conn.query(sql, email, (err, results) => {
     if (err) {
       console.log(err);
       return res.status(StatusCodes.BAD_REQUEST).end();
     }
-    
+
     const loginUser = results[0];
     if (!loginUser) {
       return res.status(StatusCodes.NOT_FOUND).end();
     } else {
-
       const hashPassword = crypto
         .pbkdf2Sync(password, loginUser.salt, 10000, 64, "sha512")
         .toString("base64");
 
       if (loginUser.password === hashPassword) {
         const accessToken = jwt.sign(
-          { email: loginUser.email, user_id: loginUser.id},
+          { email: loginUser.email, user_id: loginUser.id },
           process.env.PRIVATE_KEY,
           {
             expiresIn: "30m",
@@ -84,20 +83,22 @@ const signIn = (req, res) => {
             return res.status(StatusCodes.BAD_REQUEST).end(); //BAD REQUEST
           }
 
-          res.cookie('token', accessToken, {
-            httpOnly: true
+          res.cookie("token", accessToken, {
+            httpOnly: true,
+            secure: true,
+            sameSite: "None",
           });
           results = {
             ...results[0],
-            token: accessToken
-          }
-          
+            token: accessToken,
+          };
+
           return res.status(StatusCodes.OK).json(results);
         });
       } else {
         res.setHeader(
           "Set-Cookie",
-          "token=; Max-Age=0; Path=/; Domain=b292-222-232-138-33.ngrok-free.app; SameSite=None; Secure; HttpOnly"
+          "token=; Max-Age=0; Path=/; Domain=afe5-58-77-32-216.ngrok-free.app; SameSite=None; Secure; HttpOnly"
         );
         return res.status(StatusCodes.UNAUTHORIZED).end();
       }
@@ -178,7 +179,7 @@ const passwordReset = (req, res) => {
   });
 };
 
-const logout = (req,res) =>{
+const logout = (req, res) => {
   const jwt = ensureAuthorization(req, res);
   const user_id = jwt.user_id;
 
@@ -196,11 +197,11 @@ const logout = (req,res) =>{
 
   res.setHeader(
     "Set-Cookie",
-    "token=; Max-Age=0; Path=/; Domain=b292-222-232-138-33.ngrok-free.app; SameSite=None; Secure; HttpOnly"
+    "token=; Max-Age=0; Path=/; Domain=afe5-58-77-32-216.ngrok-free.app; SameSite=None; Secure; HttpOnly"
   );
 
   return res.status(StatusCodes.OK).end();
-}
+};
 
 module.exports = {
   signUp,
