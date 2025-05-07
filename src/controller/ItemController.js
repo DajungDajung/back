@@ -91,7 +91,6 @@ const getItems = (req, res) =>{
 const getMyItems = (req,res)=>{
 
     const user_id = req.user.user_id;
-    // const user_id = ensureAuthorization(req,res).user_id;
     const limit = parseInt(req.query.limit ?? 10, 10);
     const currentPage = parseInt(req.query.currentPage ?? 1, 10);
     const offset = limit * (currentPage - 1);

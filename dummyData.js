@@ -95,18 +95,18 @@ db.connect(err => {
     });
     const salt1 = crypto.randomBytes(64).toString("base64"); //-> 토큰에 넣어서 적용
     const hashPassword1 = crypto
-        .pbkdf2Sync(password, salt, 10000, 64, "sha512")
+        .pbkdf2Sync(password, salt1, 10000, 64, "sha512")
         .toString("base64");
         users.push({
             img_id: 1,
-            password: hashPassword,
+            password: hashPassword1,
             email: "bb@gmail.com",
             contact: '01000000001',
             name: "test2",
             nickname: "test2",
             info: faker.lorem.sentence(),
             created_at: faker.date.between({from:startDate,to:endDate}),
-            salt: salt,
+            salt: salt1,
         });
     for (let i = 0; i < 18; i++) {
         const random8 = Math.floor(Math.random() * 100000000)
