@@ -89,7 +89,7 @@ const signIn = (req, res) => {
         httpOnly: false,
         secure: true,
         sameSite: "None",
-        domain: `${process.env.DOMAIN}`
+        domain: process.env.NGROK
       });
       
       return res.status(StatusCodes.OK).json(results);
@@ -190,7 +190,7 @@ const logout = (req, res) => {
     httpOnly: false,
     secure: true,
     sameSite: "None",
-    domain: `${process.env.DOMAIN}`
+    domain: process.env.NGROK
   });
 
   return res.status(StatusCodes.OK).end();
