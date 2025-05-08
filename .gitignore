@@ -166,8 +166,8 @@ dist
 .history
 .ionide
 
-src/dummyData.js
-src/dummyDataList.json
+dummyData.js
+dummyDataList.json
 package-lock.json
 
 # End of https://www.toptal.com/developers/gitignore/api/visualstudiocode,node,dotenv
