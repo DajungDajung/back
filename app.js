@@ -3,21 +3,9 @@ const app = express();
 const cors = require("cors");
 require("dotenv").config()
 
-const allowedOrigins = [
-  "http://localhost:5173",
-  process.env.NGROK,
-  "http://localhost:3000",
-];
-
 app.use(
   cors({
-    origin: function (origin, callback) {
-      if (!origin) return callback(null, true );
-      if (allowedOrigins.includes(origin)) {
-        return callback(null, origin);
-      }
-      return callback(new Error("Not allowed by CORS: " + origin));
-    },
+    origin:"http://localhost:5173",
     credentials: true,
   })
 );

@@ -89,7 +89,6 @@ const signIn = (req, res) => {
         httpOnly: false,
         secure: true,
         sameSite: "None",
-        domain: process.env.NGROK
       });
       
       return res.status(StatusCodes.OK).json(results);
@@ -189,8 +188,7 @@ const logout = (req, res) => {
   res.clearCookie("token",{
     httpOnly: false,
     secure: true,
-    sameSite: "None",
-    domain: process.env.NGROK
+    sameSite: "None"
   });
 
   return res.status(StatusCodes.OK).end();
