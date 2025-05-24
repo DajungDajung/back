@@ -1,22 +1,11 @@
 const express = require("express");
 const app = express();
 const cors = require("cors");
-
-const allowedOrigins = [
-  "http://localhost:5173",
-  "https://afe5-58-77-32-216.ngrok-free.app",
-  "http://localhost:3000",
-];
+require("dotenv").config()
 
 app.use(
   cors({
-    origin: function (origin, callback) {
-      if (!origin) return callback(null, false);
-      if (allowedOrigins.includes(origin)) {
-        return callback(null, origin);
-      }
-      return callback(new Error("Not allowed by CORS: " + origin));
-    },
+    origin:"http://localhost:5173",
     credentials: true,
   })
 );
