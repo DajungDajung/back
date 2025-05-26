@@ -203,3 +203,12 @@ export const logout = (req: Request, res: Response): void => {
 
   res.status(StatusCodes.OK).end();
 };
+
+module.exports = {
+  signUp,
+  signIn,
+  findId,
+  passwordResetRequest,
+  passwordReset,
+  logout,
+};
