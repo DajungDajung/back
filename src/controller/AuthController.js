@@ -32,11 +32,8 @@ const signIn = (req, res) => {
   const { email, password } = req.body;
   let sql = "SELECT * FROM users WHERE email = ?";
 
-<<<<<<< HEAD:src/controller/AuthController.ts
-  conn.query(sql, [email], (err: any, results: any) => {
-=======
+
   conn.query(sql, email, (err, results) => {
->>>>>>> b08e083 (fix : 오류를 발견하여 잠시 js로 롤백합니다):src/controller/AuthController.js
     if (err) {
       console.log(err);
       return res.status(StatusCodes.BAD_REQUEST).end();
@@ -204,3 +201,4 @@ module.exports = {
   passwordReset,
   logout,
 };
+
