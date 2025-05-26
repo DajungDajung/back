@@ -38,7 +38,7 @@ const getRecentItems = (req, res) => {
       return res.status(StatusCodes.BAD_REQUEST).end();
     }
     if (results[0]) return res.status(StatusCodes.OK).json(results);
-    else return res.status(StatusCodes.NOT_FOUND).end();
+    else return res.status(StatusCodes.NO_CONTENT).end();
   });
 };
 
@@ -83,7 +83,7 @@ const getItems = (req, res) => {
       return res.status(StatusCodes.BAD_REQUEST).end();
     }
     if (results[0]) return res.status(StatusCodes.OK).json(results);
-    else return res.status(StatusCodes.NOT_FOUND).end();
+    else return res.status(StatusCodes.NO_CONTENT).end();
   });
 };
 
@@ -103,7 +103,7 @@ const getMyItems = (req, res) => {
       return res.status(StatusCodes.BAD_REQUEST).end();
     }
     if (results[0]) return res.status(StatusCodes.OK).json(results);
-    else return res.status(StatusCodes.NOT_FOUND).end();
+    else return res.status(StatusCodes.NO_CONTENT).end();
   });
 };
 

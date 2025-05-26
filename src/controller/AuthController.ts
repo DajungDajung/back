@@ -98,7 +98,6 @@ export const signIn = (req: Request, res: Response) => {
         httpOnly: false,
         secure: true,
         sameSite: "none",
-        domain: `${process.env.DOMAIN}`,
       });
 
       return res.status(StatusCodes.OK).json(results);
@@ -200,7 +199,6 @@ export const logout = (req: Request, res: Response): void => {
     httpOnly: false,
     secure: true,
     sameSite: "none",
-    domain: `${process.env.DOMAIN}`,
   });
 
   res.status(StatusCodes.OK).end();
