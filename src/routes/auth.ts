@@ -1,15 +1,16 @@
-const express = require("express");
-const router = express.Router();
+import express from "express";
 
-const {
+import {
   signUp,
   signIn,
   findId,
   passwordResetRequest,
   passwordReset,
   logout,
-} = require("../controller/AuthController");
+} from "../controller/AuthController";
 const checkAuthorization = require("../modules/auth/checkAuthorization");
+
+const router = express.Router();
 
 router.use(express.json());
 
@@ -18,6 +19,7 @@ router.post("/signin", signIn);
 router.post("/findid", findId);
 router.post("/reset", passwordResetRequest);
 router.put("/reset", passwordReset);
-router.delete("/logout", checkAuthorization, logout)
+router.delete("/logout", checkAuthorization, logout);
 
-module.exports = router;
+//module.exports = router;
+export default router;
