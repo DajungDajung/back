@@ -43,7 +43,7 @@ app.use("/comments", commentRouter);
 app.use("/auth", authRouter);
 app.use("/users", MyPageRouter);
 app.use("/store", StoreRouter);
-app.use("/category", CategoryRouter);
+app.use("/categories", CategoryRouter);
 app.use("/chats", ChatRouter);
 
 app.get("/", getRecentItems);

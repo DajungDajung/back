@@ -1,8 +1,9 @@
 import { Request, Response } from "express";
+import { OkPacketParams, RowDataPacket } from "mysql2";
 const { StatusCodes } = require("http-status-codes"); //status code 모듈
 const conn = require("../mariadb"); //db 연결
 const jwt = require("jsonwebtoken"); //jwt 모듈
-const crypto_auth = require("crypto"); //node.js 내장 모듈 암호화 모듈
+const crypto = require("crypto"); //node.js 내장 모듈 암호화 모듈
 const dotenv = require("dotenv"); //dotenv 모듈
 const ensureAuthorization = require("../modules/auth/ensureAuthorization");
 dotenv.config();
@@ -21,14 +22,14 @@ export const signUp = (req: Request, res: Response) => {
   let sql =
     "INSERT INTO users (name, nickname, email, contact, password, salt) VALUES (?,?,?,?,?,?)";
 
-  const salt = crypto_auth.randomBytes(64).toString("base64"); //-> 토큰에 넣어서 적용
-  const hashPassword = crypto_auth
+  const salt = crypto.randomBytes(64).toString("base64"); //-> 토큰에 넣어서 적용
+  const hashPassword = crypto
     .pbkdf2Sync(password, salt, 10000, 64, "sha512")
     .toString("base64");
 
   let values = [name, nickname, email, contact, hashPassword, salt];
 
-  conn.query(sql, values, (err: any, results: any) => {
+  conn.query(sql, values, (err: Error, results: OkPacketParams) => {
     if (err) {
       console.log(err);
       return res.status(StatusCodes.BAD_REQUEST).end();
@@ -41,7 +42,7 @@ export const signIn = (req: Request, res: Response) => {
   const { email, password } = req.body;
   let sql = "SELECT * FROM users WHERE email = ?";
 
-  conn.query(sql, [email], (err: any, results: any) => {
+  conn.query(sql, [email], (err: Error, results: RowDataPacket) => {
     if (err) {
       console.log(err);
       return res.status(StatusCodes.BAD_REQUEST).end();
@@ -51,7 +52,7 @@ export const signIn = (req: Request, res: Response) => {
     if (!loginUser) {
       return res.status(StatusCodes.NOT_FOUND).end();
     }
-    const hashPassword = crypto_auth
+    const hashPassword = crypto
       .pbkdf2Sync(password, loginUser.salt, 10000, 64, "sha512")
       .toString("base64");
 
@@ -88,7 +89,7 @@ export const signIn = (req: Request, res: Response) => {
     `;
     const tokenValues = [loginUser.id, refreshToken, loginUser.salt];
 
-    conn.query(tokenSql, tokenValues, (err2: any) => {
+    conn.query(tokenSql, tokenValues, (err2: Error) => {
       if (err2) {
         console.log(err2);
         return res.status(StatusCodes.BAD_REQUEST).end(); //BAD REQUEST
@@ -109,7 +110,7 @@ export const findId = (req: Request, res: Response) => {
   const { name, contact } = req.body;
   const sql = "SELECT email FROM users WHERE name = ? AND contact = ?";
   const values = [name, contact];
-  conn.query(sql, values, (err: any, results: any) => {
+  conn.query(sql, values, (err: Error, results: RowDataPacket) => {
     if (err) {
       console.log(err);
       return res.status(StatusCodes.BAD_REQUEST).end();
@@ -131,7 +132,7 @@ export const passwordResetRequest = (req: Request, res: Response) => {
   let sql = "SELECT * FROM users WHERE name = ? AND email = ? AND contact = ?";
 
   let values = [name, email, contact];
-  conn.query(sql, values, (err: any, results: any) => {
+  conn.query(sql, values, (err: Error, results: RowDataPacket) => {
     if (err) {
       console.log(err);
       return res.status(StatusCodes.BAD_REQUEST).end();
@@ -159,14 +160,14 @@ export const passwordReset = (req: Request, res: Response): void => {
     return;
   }
 
-  const salt = crypto_auth.randomBytes(64).toString("base64");
-  const hashPassword = crypto_auth
+  const salt = crypto.randomBytes(64).toString("base64");
+  const hashPassword = crypto
     .pbkdf2Sync(password, salt, 10000, 64, "sha512")
     .toString("base64");
   let sql = "UPDATE users SET password = ?, salt = ? WHERE email =?";
   let values = [hashPassword, salt, email];
 
-  conn.query(sql, values, (err: any, results: any) => {
+  conn.query(sql, values, (err: Error, results: OkPacketParams) => {
     if (err) {
       console.log(err);
       return res.status(StatusCodes.BAD_REQUEST).end();
@@ -185,7 +186,7 @@ export const logout = (req: Request, res: Response): void => {
 
   const sql = "DELETE FROM tokens WHERE user_id = ?";
 
-  conn.query(sql, [user_id], (err: any, results: any) => {
+  conn.query(sql, [user_id], (err: Error, results: OkPacketParams) => {
     if (err) {
       console.log(err);
       return res.status(StatusCodes.BAD_GATEWAY).end();
