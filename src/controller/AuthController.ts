@@ -41,7 +41,7 @@ export const signIn = (req: Request, res: Response) => {
   const { email, password } = req.body;
   let sql = "SELECT * FROM users WHERE email = ?";
 
-  conn.query(sql, email, (err: any, results: any) => {
+  conn.query(sql, [email], (err: any, results: any) => {
     if (err) {
       console.log(err);
       return res.status(StatusCodes.BAD_REQUEST).end();
@@ -202,13 +202,4 @@ export const logout = (req: Request, res: Response): void => {
   });
 
   res.status(StatusCodes.OK).end();
-};
-
-module.exports = {
-  signUp,
-  signIn,
-  findId,
-  passwordResetRequest,
-  passwordReset,
-  logout,
 };

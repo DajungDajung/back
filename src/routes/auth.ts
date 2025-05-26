@@ -21,5 +21,5 @@ router.post("/reset", passwordResetRequest);
 router.put("/reset", passwordReset);
 router.delete("/logout", checkAuthorization, logout);
 
-//module.exports = router;
-export default router;
+module.exports = router;
+// export default router;
