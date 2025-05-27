@@ -1,12 +1,23 @@
-have_fun: true
-code_review:
-  disable: false
-  comment_severity_threshold: MEDIUM
-  max_review_comments: -1
-  pull_request_opened:
-    help: false
-    summary: true
-    code_review: true
-ignore_patterns:
-  - 'node_modules/**'
-  - 'dist/**' 
+name: "Gemini AI Code Review"
+permissions:
+  contents: read
+  pull-requests: write
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  code-review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Run Gemini AI Code Review
+        uses: gemini-ai/gemini-action@v1
+        with:
+          config: .gemini/config.yaml
+          github_token: ${{ secrets.GITHUB_TOKEN }}
