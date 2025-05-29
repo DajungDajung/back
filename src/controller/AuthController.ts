@@ -1,3 +1,5 @@
+import { Request, Response } from "express";
+import { OkPacketParams, RowDataPacket } from "mysql2";
 const { StatusCodes } = require("http-status-codes"); //status code 모듈
 const conn = require("../mariadb"); //db 연결
 const jwt = require("jsonwebtoken"); //jwt 모듈
@@ -6,9 +8,17 @@ const dotenv = require("dotenv"); //dotenv 모듈
 const ensureAuthorization = require("../modules/auth/ensureAuthorization");
 dotenv.config();
 
+interface SignUpBody {
+  name: string;
+  nickname: string;
+  email: string;
+  contact: string;
+  password: string;
+}
+
 //salt 처라허가
-const signUp = (req, res) => {
-  const { name, nickname, email, contact, password } = req.body;
+export const signUp = (req: Request, res: Response) => {
+  const { name, nickname, email, contact, password }: SignUpBody = req.body;
   let sql =
     "INSERT INTO users (name, nickname, email, contact, password, salt) VALUES (?,?,?,?,?,?)";
 
@@ -19,7 +29,7 @@ const signUp = (req, res) => {
 
   let values = [name, nickname, email, contact, hashPassword, salt];
 
-  conn.query(sql, values, (err, results) => {
+  conn.query(sql, values, (err: Error, results: OkPacketParams) => {
     if (err) {
       console.log(err);
       return res.status(StatusCodes.BAD_REQUEST).end();
@@ -28,11 +38,11 @@ const signUp = (req, res) => {
   });
 };
 
-const signIn = (req, res) => {
+export const signIn = (req: Request, res: Response) => {
   const { email, password } = req.body;
   let sql = "SELECT * FROM users WHERE email = ?";
 
-  conn.query(sql, email, (err, results) => {
+  conn.query(sql, [email], (err: Error, results: RowDataPacket) => {
     if (err) {
       console.log(err);
       return res.status(StatusCodes.BAD_REQUEST).end();
@@ -68,16 +78,18 @@ const signIn = (req, res) => {
       }
     );
 
-    const tokenSql = `INSERT INTO tokens (user_id, refresh_token, salt, created_at, expires_at)
+    const tokenSql = `
+      INSERT INTO tokens (user_id, refresh_token, salt, created_at, expires_at)
       VALUES (?, ?, ?, NOW(), DATE_ADD(NOW(), INTERVAL 14 DAY))
         ON DUPLICATE KEY UPDATE
         refresh_token = VALUES(refresh_token),
         salt = VALUES(salt),
         created_at = NOW(),
-        expires_at = DATE_ADD(NOW(), INTERVAL 14 DAY)`;
+        expires_at = DATE_ADD(NOW(), INTERVAL 14 DAY)
+    `;
     const tokenValues = [loginUser.id, refreshToken, loginUser.salt];
 
-    conn.query(tokenSql, tokenValues, (err2) => {
+    conn.query(tokenSql, tokenValues, (err2: Error) => {
       if (err2) {
         console.log(err2);
         return res.status(StatusCodes.BAD_REQUEST).end(); //BAD REQUEST
@@ -86,7 +98,7 @@ const signIn = (req, res) => {
       res.cookie("token", accessToken, {
         httpOnly: false,
         secure: true,
-        sameSite: "None",
+        sameSite: "none",
       });
 
       return res.status(StatusCodes.OK).json(results);
@@ -94,11 +106,11 @@ const signIn = (req, res) => {
   });
 };
 
-const findId = (req, res) => {
+export const findId = (req: Request, res: Response) => {
   const { name, contact } = req.body;
   const sql = "SELECT email FROM users WHERE name = ? AND contact = ?";
   const values = [name, contact];
-  conn.query(sql, values, (err, results) => {
+  conn.query(sql, values, (err: Error, results: RowDataPacket) => {
     if (err) {
       console.log(err);
       return res.status(StatusCodes.BAD_REQUEST).end();
@@ -115,12 +127,12 @@ const findId = (req, res) => {
   });
 };
 
-const passwordResetRequest = (req, res) => {
+export const passwordResetRequest = (req: Request, res: Response) => {
   const { name, email, contact } = req.body;
   let sql = "SELECT * FROM users WHERE name = ? AND email = ? AND contact = ?";
 
   let values = [name, email, contact];
-  conn.query(sql, values, (err, results) => {
+  conn.query(sql, values, (err: Error, results: RowDataPacket) => {
     if (err) {
       console.log(err);
       return res.status(StatusCodes.BAD_REQUEST).end();
@@ -138,13 +150,14 @@ const passwordResetRequest = (req, res) => {
   });
 };
 
-const passwordReset = (req, res) => {
+export const passwordReset = (req: Request, res: Response): void => {
   const { password, passwordConfirm, email } = req.body;
 
   if (password !== passwordConfirm) {
-    return res.status(StatusCodes.BAD_REQUEST).json({
+    res.status(StatusCodes.BAD_REQUEST).json({
       message: "비밀번호와 비밀번호 확인이 일치하지 않습니다.",
     });
+    return;
   }
 
   const salt = crypto.randomBytes(64).toString("base64");
@@ -154,7 +167,7 @@ const passwordReset = (req, res) => {
   let sql = "UPDATE users SET password = ?, salt = ? WHERE email =?";
   let values = [hashPassword, salt, email];
 
-  conn.query(sql, values, (err, results) => {
+  conn.query(sql, values, (err: Error, results: OkPacketParams) => {
     if (err) {
       console.log(err);
       return res.status(StatusCodes.BAD_REQUEST).end();
@@ -167,13 +180,13 @@ const passwordReset = (req, res) => {
   });
 };
 
-const logout = (req, res) => {
+export const logout = (req: Request, res: Response): void => {
   const jwt = ensureAuthorization(req, res);
   const user_id = jwt.user_id;
 
   const sql = "DELETE FROM tokens WHERE user_id = ?";
 
-  conn.query(sql, [user_id], (err, results) => {
+  conn.query(sql, [user_id], (err: Error, results: OkPacketParams) => {
     if (err) {
       console.log(err);
       return res.status(StatusCodes.BAD_GATEWAY).end();
@@ -186,10 +199,10 @@ const logout = (req, res) => {
   res.clearCookie("token", {
     httpOnly: false,
     secure: true,
-    sameSite: "None",
+    sameSite: "none",
   });
 
-  return res.status(StatusCodes.OK).end();
+  res.status(StatusCodes.OK).end();
 };
 
 module.exports = {
