@@ -4,29 +4,28 @@ const app = express();
 const cors = require("cors");
 const { Server } = require("socket.io");
 require("dotenv").config();
+const { AppDataSource } = require("./src/data-source");
 
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:5173",
+    origin: "*",
     credentials: true,
   },
 });
 
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: "*",
     credentials: true,
   })
 );
 
-const {
-  getRecentItems,
-} = require("./src/controller/ItemController");
+const { getRecentItems } = require("./src/controller/ItemController");
 
 app.use(express.json());
 
-app.listen(process.env.PORT);
+server.listen(process.env.PORT);
 
 const itemRouter = require("./src/routes/items");
 const likeRouter = require("./src/routes/likes");
@@ -51,7 +50,27 @@ app.get("/favicon.ico", (req, res) => res.sendStatus(204));
 
 const chatSocket = require("./src/modules/chatSocket");
 
-io.on("connection", (socket) => {
-  console.log("소켓 연결 완료 :", socket.id);
-  chatSocket(socket, io);
-});
+AppDataSource.initialize()
+  .then(() => {
+    console.log("TypeORM 연결 성공");
+
+    // 소켓 연결
+    io.on("connection", (socket) => {
+      console.log(`새로운 소켓 연결 완료`);
+      console.log(`Socket ID: ${socket.id}`);
+
+      try {
+        chatSocket(socket, io);
+      } catch (error) {
+        console.error("채팅 소켓 처리 중 오류 발생:", error);
+        socket.emit("error", "채팅 처리 중 오류가 발생했습니다.");
+      }
+    });
+
+    io.on("error", (error) => {
+      console.error("Socket.IO 에러:", error);
+    });
+  })
+  .catch((error) => {
+    console.error("TypeORM 연결 실패:", error);
+  });
