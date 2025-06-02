@@ -1,40 +1,42 @@
-const mariadb = require('mysql2/promise');
-const {StatusCodes} = require('http-status-codes');
-const env = require('dotenv');
+const mariadb = require("mysql2/promise");
+const { StatusCodes } = require("http-status-codes");
+const env = require("dotenv");
 env.config();
 
 const getUserInfo = async (req, res) => {
-    const conn = await mariadb.createConnection({
-            host: process.env.DB_HOST,
-            user: process.env.DB_USER,
-            password : process.env.DB_PASSWORD,
-            database: process.env.DB_NAME,
-            dateStrings : true
-        });
+  const conn = await mariadb.createConnection({
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASSWORD,
+    database: process.env.DB_NAME,
+    dateStrings: true,
+  });
 
-    const userId = req.params.id;
-    let result = {};
+  const userId = req.params.id;
+  let result = {};
 
-    let sql = 'SELECT id, img_id, nickname, created_at, info, email, contact FROM users WHERE id = ?'
+  let sql =
+    "SELECT id, img_id, nickname, created_at, info, email, contact FROM users WHERE id = ?";
 
-    try {
-        const [foundUser] = await conn.query(sql, userId);
-    
-        if(!foundUser?.length)  {
-            return res.status(StatusCodes.NOT_FOUND).send("해당 ID의 사용자를 찾을 수 없습니다.");
-        }
-        
-        result.userData = foundUser;
+  const [foundUser, foundUserFields] = await conn.query(sql, userId);
 
-        sql = 'SELECT id, img_id, title, price, created_at FROM items WHERE user_id = ?'
+  if (!foundUser?.length) {
+    return res
+      .status(StatusCodes.NOT_FOUND)
+      .send("해당 ID의 사용자를 찾을 수 없습니다.");
+  }
 
-        const [items] = await conn.query(sql, userId);
-        
-        result.itemData = items;
-        return res.status(StatusCodes.OK).json(result);
-    } catch (err) {
-        return res.status(StatusCodes.BAD_REQUEST).json(err);
-    }
-}
+  result.userData = foundUser;
+  sql =
+    "SELECT id, img_id, title, price, created_at FROM items WHERE user_id = ?";
+  try {
+    const [items] = await conn.query(sql, userId);
+
+    result.itemData = items;
+    return res.status(StatusCodes.OK).json(result);
+  } catch (err) {
+    return res.status(StatusCodes.BAD_REQUEST).json(err);
+  }
+};
 
 module.exports = getUserInfo;
