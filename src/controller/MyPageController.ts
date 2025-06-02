@@ -1,3 +1,7 @@
+import { Request, Response } from "express";
+import { RowDataPacket, FieldPacket } from "mysql2";
+import { User } from "../types/UserType";
+import { TokenPayload } from "../types/TokenType";
 const connection = require("../mariadb");
 const mariadb = require("mysql2/promise");
 const { StatusCodes } = require("http-status-codes");
@@ -6,11 +10,10 @@ const dotenv = require("dotenv");
 const crypto = require("crypto");
 const ensureAuthorization = require("../modules/auth/ensureAuthorization");
 const jwtErrorhandler = require("../modules/auth/jwtErrorhandler");
-const { error } = require("console");
 
 dotenv.config({ path: __dirname + "/../.env" });
 
-const getMyPage = (req, res) => {
+const getMyPage = (req: Request, res: Response) => {
   const authorization = ensureAuthorization(req, res);
 
   if (authorization instanceof ReferenceError) {
@@ -21,9 +24,9 @@ const getMyPage = (req, res) => {
 
   const sql =
     "SELECT id, img_id, nickname, name, created_at, info, email, contact from users WHERE id = ?";
-  const userId = authorization.user_id;
+  const userId: number = authorization.user_id;
 
-  connection.query(sql, userId, (err, results) => {
+  connection.query(sql, userId, (err: Error, results: User) => {
     if (err) {
       return res.status(StatusCodes.BAD_REQUEST).json(err);
     }
@@ -32,7 +35,7 @@ const getMyPage = (req, res) => {
   });
 };
 
-const updateMyPage = async (req, res) => {
+const updateMyPage = async (req: Request, res: Response) => {
   const conn = await mariadb.createConnection({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
@@ -41,7 +44,7 @@ const updateMyPage = async (req, res) => {
     dateStrings: true,
   });
 
-  const authorization = ensureAuthorization(req, res);
+  const authorization: TokenPayload | Error = ensureAuthorization(req, res);
 
   if (authorization instanceof ReferenceError) {
     return res.status(StatusCodes.BAD_REQUEST).send("로그인이 필요합니다.");
@@ -59,9 +62,10 @@ const updateMyPage = async (req, res) => {
   }
 
   let sql = "SELECT * FROM users WHERE id = ? ";
-  const userId = authorization.user_id;
+  const userId: number = authorization.user_id;
 
-  const [foundUser, foundUserFields] = await conn.query(sql, userId);
+  const [foundUser, foundUserFields]: [RowDataPacket[], FieldPacket[]] =
+    await conn.query(sql, userId);
 
   if (!foundUser?.length) {
     return res
@@ -99,7 +103,7 @@ const updateMyPage = async (req, res) => {
   }
 };
 
-const deleteUser = async (req, res) => {
+const deleteUser = async (req: Request, res: Response) => {
   const conn = await mariadb.createConnection({
     host: process.env.DB_HOST,
     user: process.env.DB_USER,
@@ -156,10 +160,11 @@ const deleteUser = async (req, res) => {
   }
 };
 
-const getNewValueOrDefault = (newValue, defaultValue) => {
+const getNewValueOrDefault = (
+  newValue: string | number,
+  defaultValue: string | number
+) => {
   return newValue !== undefined && newValue !== null && newValue !== ""
     ? newValue
     : defaultValue;
 };
-
-module.exports = { getMyPage, updateMyPage, deleteUser };
