@@ -14,4 +14,5 @@ export const AppDataSource = new DataSource({
   entities: [Chat, ChatRoom],
   synchronize: true,
   logging: true,
+  timezone: "+09:00",
 });

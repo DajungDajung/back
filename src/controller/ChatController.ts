@@ -3,9 +3,12 @@ import { StatusCodes } from "http-status-codes";
 import { AppDataSource } from "../data-source";
 import jwt from "jsonwebtoken";
 import { ChatRoom } from "../entity/ChatRoom";
-import { Chat } from "../entity/Chat";
-const conn = require("../mariadb");
 const ensureAuthorization = require("../modules/auth/ensureAuthorization");
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 // 채팅방 생성
 export const createChatRoom = async (req: Request, res: Response) => {
@@ -20,8 +23,15 @@ export const createChatRoom = async (req: Request, res: Response) => {
       message: "잘못된 토큰입니다.",
     });
   } else {
-    const { user_id: current_id } = authorization;
-    const { opponent_id, item_id } = req.body;
+    const current_id = Number(authorization.user_id);
+    const opponent_id = Number(req.body.opponent_id);
+    const { item_id } = req.body;
+
+    if (current_id === opponent_id) {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        message: "자기 자신과는 채팅할 수 없습니다.",
+      });
+    }
 
     try {
       const chatRoomRepo = AppDataSource.getRepository(ChatRoom);
@@ -79,7 +89,15 @@ export const getChatRooms = async (req: Request, res: Response) => {
             r.updated_at,
             u.id AS user_id,
             u.nickname,
-            u.img_id
+            u.img_id,
+            (
+              SELECT COUNT(*) 
+              FROM chats c 
+              WHERE 
+                c.room_id = r.id 
+                AND c.receiver_id = ? 
+                AND c.is_read = false
+            ) AS unread_count
           FROM chat_rooms r
           JOIN users u 
             ON (
@@ -90,10 +108,17 @@ export const getChatRooms = async (req: Request, res: Response) => {
           WHERE r.user1_id = ? OR r.user2_id = ?
           ORDER BY r.updated_at DESC
       `,
-        [userId, userId, userId, userId]
+        [userId, userId, userId, userId, userId]
       );
 
-      return res.status(StatusCodes.OK).json(rooms);
+      const convertedRooms = rooms.map((room: any) => ({
+        ...room,
+        updated_at: dayjs(room.updated_at)
+          .tz("Asia/Seoul")
+          .format("YYYY-MM-DD HH:mm:ss"),
+      }));
+
+      return res.status(StatusCodes.OK).json(convertedRooms);
     } catch (err) {
       console.error(err);
       return res
@@ -151,7 +176,14 @@ export const getChats = async (req: Request, res: Response) => {
         [userId, userId, parseInt(room_id, 10)]
       );
 
-      return res.status(StatusCodes.OK).json(chats);
+      const convertedChats = chats.map((chat: any) => ({
+        ...chat,
+        created_at: dayjs(chat.created_at)
+          .tz("Asia/Seoul")
+          .format("YYYY-MM-DD HH:mm:ss"),
+      }));
+
+      return res.status(StatusCodes.OK).json(convertedChats);
     } catch (err) {
       console.error(err);
       return res
