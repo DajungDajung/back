@@ -82,13 +82,13 @@ export const updateMyPage = async (req: Request, res: Response) => {
 
   sql =
     "UPDATE users SET nickname = ?, name = ?, email = ?, info = ?, contact = ?, password = ?, salt = ? WHERE id = ?";
-  const values = [];
-
-  Object.keys(newUserDatas)
-    .filter((key): key is UserKey => key !== "password" && key !== "salt")
-    .forEach((key) => {
-      values.push(getNewValueOrDefault(newUserDatas[key], foundUser[0][key]));
-    });
+  const values = [
+    getNewValueOrDefault(newUserDatas.nickname, foundUser[0].nickname),
+    getNewValueOrDefault(newUserDatas.name, foundUser[0].name),
+    getNewValueOrDefault(newUserDatas.email, foundUser[0].email),
+    getNewValueOrDefault(newUserDatas.info, foundUser[0].info),
+    getNewValueOrDefault(newUserDatas.contact, foundUser[0].contact)
+  ];
 
   const salt = crypto.randomBytes(64).toString("base64");
   let newPassword = crypto
