@@ -29,7 +29,7 @@ export const getMyPage = (req: Request, res: Response) => {
 
   connection.query(sql, userId, (err: Error, results: User[]) => {
     if (err) {
-      return res.status(StatusCodes.BAD_REQUEST).json(err);
+      return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ message: '사용자 데이터를 가져오는 동안 오류가 발생했습니다.' });
     }
 
     if(!results.length) {
