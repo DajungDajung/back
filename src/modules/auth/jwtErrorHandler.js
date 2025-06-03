@@ -1,9 +1,7 @@
-import { Response } from "express";
-const ensureAuthorization = require("./ensureAuthorization");
 const jwt = require("jsonwebtoken");
 const { StatusCodes } = require("http-status-codes");
 
-export const handleTokenError = (err: Error, res: Response) => {
+const jwtErrorHandler = (err, res) => {
   if (err instanceof jwt.TokenExpiredError) {
     return res
       .status(StatusCodes.UNAUTHORIZED)
@@ -18,3 +16,5 @@ export const handleTokenError = (err: Error, res: Response) => {
       .send("알 수 없는 토큰 오류가 발생했습니다.");
   }
 };
+
+module.exports = jwtErrorHandler;

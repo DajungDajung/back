@@ -48,5 +48,7 @@ export const getUserInfo = async (req: Request, res: Response) => {
     return res.status(StatusCodes.OK).json(result);
   } catch (err) {
     return res.status(StatusCodes.BAD_REQUEST).json(err);
+  } finally {
+    if (conn) await conn.end();
   }
 };
