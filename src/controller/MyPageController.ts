@@ -90,10 +90,16 @@ export const updateMyPage = async (req: Request, res: Response) => {
     getNewValueOrDefault(newUserDatas.contact, foundUser[0].contact)
   ];
 
-  const salt = crypto.randomBytes(64).toString("base64");
-  let newPassword = crypto
-    .pbkdf2Sync(newUserDatas.password, salt, 10000, 64, "sha512")
-    .toString("base64");
+  let salt, newPassword;
+  if (newUserDatas.password && newUserDatas.password.trim()) {
+    salt = crypto.randomBytes(64).toString("base64");
+    newPassword = crypto
+      .pbkdf2Sync(newUserDatas.password, salt, 10000, 64, "sha512")
+      .toString("base64");
+  } else {
+    salt = foundUser[0].salt;
+    newPassword = foundUser[0].password;
+  }
 
   values.push(newPassword, salt, userId);
 
