@@ -1,8 +1,8 @@
 export interface Location {
   id?: number;
   user_id?: number;
-  item_id: number;
   title: string;
-  coordinate: string;
+  coordinate_x: string; 
+  coordinate_y: string; 
   address: string;
 }

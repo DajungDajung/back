@@ -20,9 +20,7 @@ app.use(
   })
 );
 
-const {
-  getRecentItems,
-} = require("./src/controller/ItemController");
+const { getRecentItems } = require("./src/controller/ItemController");
 
 app.use(express.json());
 
@@ -36,6 +34,7 @@ const MyPageRouter = require("./src/routes/myPage");
 const StoreRouter = require("./src/routes/store");
 const ChatRouter = require("./src/routes/chats");
 const CategoryRouter = require("./src/routes/category");
+const LocationRouter = require("./src/routes/location");
 
 app.use("/items", itemRouter);
 app.use("/users/likes", likeRouter);
@@ -45,6 +44,7 @@ app.use("/users", MyPageRouter);
 app.use("/store", StoreRouter);
 app.use("/categories", CategoryRouter);
 app.use("/chats", ChatRouter);
+app.use("/location", LocationRouter);
 
 app.get("/", getRecentItems);
 app.get("/favicon.ico", (req, res) => res.sendStatus(204));

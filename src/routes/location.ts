@@ -7,6 +7,8 @@ const {
   updateLocation,
 } = require("../controller/LocationController");
 
-router.route("/").get(getLocation).post(addLocation).put(updateLocation);
+router.route("/").post(addLocation).put(updateLocation);
+
+router.route("/:id").get(getLocation);
 
 module.exports = router;

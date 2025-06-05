@@ -1,5 +1,6 @@
 const { StatusCodes } = require("http-status-codes");
 const db = require("../mariadb.js");
+const mariadb = require("mysql2/promise");
 const ensureAuthorization = require("../modules/auth/ensureAuthorization.js");
 
 const getCategory = (req, res) => {
@@ -107,7 +108,8 @@ const getMyItems = (req, res) => {
   });
 };
 
-const getItemDetail = (req, res) => {
+const getItemDetail = async (req, res) => {
+
   const item_id = req.params.id;
   const user_id = req.user?.user_id ?? 0;
 

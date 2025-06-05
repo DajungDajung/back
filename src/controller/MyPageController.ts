@@ -83,11 +83,11 @@ export const updateMyPage = async (req: Request, res: Response) => {
   sql =
     "UPDATE users SET nickname = ?, name = ?, email = ?, info = ?, contact = ?, password = ?, salt = ? WHERE id = ?";
   const values = [
-    getNewValueOrDefault(newUserDatas.nickname, foundUser[0].nickname),
-    getNewValueOrDefault(newUserDatas.name, foundUser[0].name),
-    getNewValueOrDefault(newUserDatas.email, foundUser[0].email),
-    getNewValueOrDefault(newUserDatas.info, foundUser[0].info),
-    getNewValueOrDefault(newUserDatas.contact, foundUser[0].contact)
+    GetNewValueOrDefault(newUserDatas.nickname, foundUser[0].nickname),
+    GetNewValueOrDefault(newUserDatas.name, foundUser[0].name),
+    GetNewValueOrDefault(newUserDatas.email, foundUser[0].email),
+    GetNewValueOrDefault(newUserDatas.info, foundUser[0].info),
+    GetNewValueOrDefault(newUserDatas.contact, foundUser[0].contact)
   ];
 
   let salt, newPassword;
@@ -166,7 +166,7 @@ export const deleteUser = async (req: Request, res: Response) => {
   }
 };
 
-const getNewValueOrDefault = (
+export const GetNewValueOrDefault = (
   newValue: string | number,
   defaultValue: string | number
 ) => {
