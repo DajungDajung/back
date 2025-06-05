@@ -7,6 +7,8 @@ const ensureAuthorization = require("../modules/auth/ensureAuthorization");
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
+import { Chat } from "../entity/Chat";
+import { ChatRoomUser } from "../entity/ChatRoomUser";
 dayjs.extend(utc);
 dayjs.extend(timezone);
 
@@ -23,11 +25,11 @@ export const createChatRoom = async (req: Request, res: Response) => {
       message: "잘못된 토큰입니다.",
     });
   } else {
-    const current_id = Number(authorization.user_id);
-    const opponent_id = Number(req.body.opponent_id);
+    const currentId = Number(authorization.user_id);
+    const opponentId = Number(req.body.opponent_id);
     const { item_id } = req.body;
 
-    if (current_id === opponent_id) {
+    if (currentId === opponentId) {
       return res.status(StatusCodes.BAD_REQUEST).json({
         message: "자기 자신과는 채팅할 수 없습니다.",
       });
@@ -35,24 +37,37 @@ export const createChatRoom = async (req: Request, res: Response) => {
 
     try {
       const chatRoomRepo = AppDataSource.getRepository(ChatRoom);
+      const chatRoomUserRepo = AppDataSource.getRepository(ChatRoomUser);
 
-      let room = await chatRoomRepo.findOne({
-        where: [
-          { user1_id: current_id, user2_id: opponent_id, item_id },
-          { user1_id: opponent_id, user2_id: current_id, item_id },
-        ],
-      });
+      const existingRoom = await chatRoomRepo
+        .createQueryBuilder("chat_room")
+        .innerJoin("chat_room.participants", "u1", "u1.user_id = :currentId", {
+          currentId,
+        })
+        .innerJoin("chat_room.participants", "u2", "u2.user_id = :opponentId", {
+          opponentId,
+        })
+        .where("chat_room.item_id = :item_id", { item_id })
+        .getOne();
 
-      if (!room) {
-        room = chatRoomRepo.create({
-          user1_id: current_id,
-          user2_id: opponent_id,
-          item_id,
-        });
-        await chatRoomRepo.save(room);
+      if (existingRoom) {
+        return res.status(StatusCodes.OK).json(existingRoom);
       }
 
-      return res.status(StatusCodes.CREATED).json(room);
+      const newRoom = chatRoomRepo.create({ item_id });
+      await chatRoomRepo.save(newRoom);
+
+      const user1 = chatRoomUserRepo.create({
+        room_id: newRoom.id,
+        user_id: currentId,
+      });
+      const user2 = chatRoomUserRepo.create({
+        room_id: newRoom.id,
+        user_id: opponentId,
+      });
+      await chatRoomUserRepo.save([user1, user2]);
+
+      return res.status(StatusCodes.CREATED).json(newRoom);
     } catch (err) {
       console.error(err);
       return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
@@ -81,37 +96,32 @@ export const getChatRooms = async (req: Request, res: Response) => {
       const rooms = await AppDataSource.query(
         `
           SELECT 
-            r.id AS room_id,
-            r.user1_id,
-            r.user2_id,
-            r.item_id,
-            r.last_message,
-            r.updated_at,
-            u.id AS user_id,
-            u.nickname,
-            u.img_id,
-            (
-              SELECT COUNT(*) 
-              FROM chats c 
-              WHERE 
-                c.room_id = r.id 
-                AND c.receiver_id = ? 
-                AND c.is_read = false
-            ) AS unread_count
-          FROM chat_rooms r
-          JOIN users u 
-            ON (
-              (r.user1_id = ? AND u.id = r.user2_id)
-              OR
-              (r.user2_id = ? AND u.id = r.user1_id)
-            )
-          WHERE r.user1_id = ? OR r.user2_id = ?
-          ORDER BY r.updated_at DESC
+          r.id AS room_id,
+          r.item_id,
+          r.last_message,
+          r.updated_at,
+          u.id AS user_id,
+          u.nickname,
+          u.img_id,
+          (
+            SELECT COUNT(*)
+            FROM chats c
+            WHERE c.room_id = r.id AND c.receiver_id = ? AND c.is_read = false
+          ) AS unread_count
+        FROM chat_rooms r
+        JOIN chat_room_users cru ON cru.room_id = r.id
+        JOIN users u ON u.id = cru.user_id
+        WHERE r.id IN (
+          SELECT cru2.room_id
+          FROM chat_room_users cru2
+          WHERE cru2.user_id = ?
+        ) AND u.id != ?
+        ORDER BY r.updated_at DESC
       `,
-        [userId, userId, userId, userId, userId]
+        [userId, userId, userId]
       );
 
-      const convertedRooms = rooms.map((room: any) => ({
+      const convertedRooms = rooms.map((room: ChatRoom) => ({
         ...room,
         updated_at: dayjs(room.updated_at)
           .tz("Asia/Seoul")
@@ -176,7 +186,7 @@ export const getChats = async (req: Request, res: Response) => {
         [userId, userId, parseInt(room_id, 10)]
       );
 
-      const convertedChats = chats.map((chat: any) => ({
+      const convertedChats = chats.map((chat: Chat) => ({
         ...chat,
         created_at: dayjs(chat.created_at)
           .tz("Asia/Seoul")

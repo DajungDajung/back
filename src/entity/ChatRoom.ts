@@ -6,17 +6,12 @@ import {
   OneToMany,
 } from "typeorm";
 import { Chat } from "./Chat";
+import { ChatRoomUser } from "./ChatRoomUser";
 
 @Entity("chat_rooms")
 export class ChatRoom {
   @PrimaryGeneratedColumn()
   id!: number;
-
-  @Column()
-  user1_id!: number;
-
-  @Column()
-  user2_id!: number;
 
   @Column()
   item_id!: number;
@@ -29,4 +24,7 @@ export class ChatRoom {
 
   @OneToMany(() => Chat, (chat) => chat.chatRoom)
   chats!: Chat[];
+
+  @OneToMany(() => ChatRoomUser, (chatRoomUser) => chatRoomUser.chatRoom)
+  participants!: ChatRoomUser[];
 }

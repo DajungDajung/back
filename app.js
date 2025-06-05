@@ -9,14 +9,14 @@ const { AppDataSource } = require("./src/data-source");
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "*",
+    origin: "http://localhost:5173",
     credentials: true,
   },
 });
 
 app.use(
   cors({
-    origin: "*",
+    origin: "http://localhost:5173",
     credentials: true,
   })
 );
@@ -52,23 +52,18 @@ const chatSocket = require("./src/modules/chatSocket");
 
 AppDataSource.initialize()
   .then(() => {
-    console.log("TypeORM 연결 성공");
-
     // 소켓 연결
     io.on("connection", (socket) => {
-      console.log(`새로운 소켓 연결 완료`);
-      console.log(`Socket ID: ${socket.id}`);
-
       try {
         chatSocket(socket, io);
       } catch (error) {
-        console.error("채팅 소켓 처리 중 오류 발생:", error);
+        console.error("[Socket] 채팅 소켓 처리 중 오류 발생:", error);
         socket.emit("error", "채팅 처리 중 오류가 발생했습니다.");
       }
     });
 
     io.on("error", (error) => {
-      console.error("Socket.IO 에러:", error);
+      console.error("[Socket] Socket.IO 에러:", error);
     });
   })
   .catch((error) => {
