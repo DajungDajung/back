@@ -5,9 +5,11 @@ const conn = require("../mariadb"); //db 연결
 const jwt = require("jsonwebtoken"); //jwt 모듈
 const crypto = require("crypto"); //node.js 내장 모듈 암호화 모듈
 const dotenv = require("dotenv"); //dotenv 모듈
+
 //const axios = require("axios");
 //import { AxiosError } from "axios";
 import axios, { AxiosError } from "axios";
+
 const ensureAuthorization = require("../modules/auth/ensureAuthorization");
 dotenv.config();
 
@@ -40,6 +42,7 @@ export const signUp = (req: Request, res: Response) => {
     return res.status(StatusCodes.CREATED).json(results);
   });
 };
+
 export const kakao = async (req: Request, res: Response) => {
   const { code } = req.query;
   if (!code) return res.status(400).send("인가코드 없음");
@@ -289,6 +292,7 @@ export const naver = async (req: Request, res: Response) => {
     return res.status(500).send("네이버 로그인 실패");
   }
 };
+
 export const signIn = (req: Request, res: Response) => {
   const { email, password } = req.body;
   let sql = "SELECT * FROM users WHERE email = ?";
@@ -399,13 +403,14 @@ export const passwordResetRequest = (req: Request, res: Response) => {
   });
 };
 
-export const passwordReset = (req: Request, res: Response) => {
+export const passwordReset = (req: Request, res: Response): void => {
   const { password, passwordConfirm, email } = req.body;
 
   if (password !== passwordConfirm) {
-    return res.status(StatusCodes.BAD_REQUEST).json({
+    res.status(StatusCodes.BAD_REQUEST).json({
       message: "비밀번호와 비밀번호 확인이 일치하지 않습니다.",
     });
+    return;
   }
 
   const salt = crypto.randomBytes(64).toString("base64");
@@ -428,13 +433,13 @@ export const passwordReset = (req: Request, res: Response) => {
   });
 };
 
-export const logout = (req: Request, res: Response) => {
+export const logout = (req: Request, res: Response): void => {
   const jwt = ensureAuthorization(req, res);
   const user_id = jwt.user_id;
 
   const sql = "DELETE FROM tokens WHERE user_id = ?";
 
-  conn.query(sql, [user_id], (err: Error, results: RowDataPacket) => {
+  conn.query(sql, [user_id], (err: Error, results: OkPacketParams) => {
     if (err) {
       console.log(err);
       return res.status(StatusCodes.BAD_GATEWAY).end();
@@ -450,7 +455,7 @@ export const logout = (req: Request, res: Response) => {
     sameSite: "none",
   });
 
-  return res.status(StatusCodes.OK).end();
+  res.status(StatusCodes.OK).end();
 };
 
 module.exports = {

@@ -22,7 +22,6 @@ app.use(
 
 const {
   getRecentItems,
-  getCategory,
 } = require("./src/controller/ItemController");
 
 app.use(express.json());
@@ -36,6 +35,7 @@ const authRouter = require("./src/routes/auth");
 const MyPageRouter = require("./src/routes/myPage");
 const StoreRouter = require("./src/routes/store");
 const ChatRouter = require("./src/routes/chats");
+const CategoryRouter = require("./src/routes/category");
 
 app.use("/items", itemRouter);
 app.use("/users/likes", likeRouter);
@@ -43,7 +43,7 @@ app.use("/comments", commentRouter);
 app.use("/auth", authRouter);
 app.use("/users", MyPageRouter);
 app.use("/store", StoreRouter);
-app.use("/category", getCategory);
+app.use("/categories", CategoryRouter);
 app.use("/chats", ChatRouter);
 
 app.get("/", getRecentItems);

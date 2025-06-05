@@ -1,11 +1,14 @@
 {
   "scripts": {
-    "start": "nodemon app.js",
+    "start": "npm run build:live",
+    "build": "tsc -p .",
+    "build:live": "nodemon --watch '*.ts' --exec ts-node app.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
     "@faker-js/faker": "^9.7.0",
     "@types/express": "^5.0.2",
+    "@tsconfig/recommended": "^1.0.8",
     "@types/jest": "^29.5.14",
     "@types/node": "^22.15.21",
     "@types/react": "^19.1.5",
@@ -30,6 +33,7 @@
     "@tsconfig/node23": "^23.0.2",
     "@tsconfig/recommended": "^1.0.8",
     "@types/express": "^5.0.2",
+    "@types/jsonwebtoken": "^9.0.9",
     "@types/node": "^22.15.21",
     "nodemon": "^3.1.9",
     "ts-node": "^10.9.2",
