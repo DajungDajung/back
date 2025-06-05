@@ -297,7 +297,7 @@ export const signIn = (req: Request, res: Response) => {
   const { email, password } = req.body;
   let sql = "SELECT * FROM users WHERE email = ?";
 
-  conn.query(sql, email, (err: Error, results: RowDataPacket) => {
+  conn.query(sql, [email], (err: Error, results: RowDataPacket) => {
     if (err) {
       console.log(err);
       return res.status(StatusCodes.BAD_REQUEST).end();
@@ -420,7 +420,7 @@ export const passwordReset = (req: Request, res: Response): void => {
   let sql = "UPDATE users SET password = ?, salt = ? WHERE email =?";
   let values = [hashPassword, salt, email];
 
-  conn.query(sql, values, (err: Error, results: RowDataPacket) => {
+  conn.query(sql, values, (err: Error, results: OkPacketParams) => {
     if (err) {
       console.log(err);
       return res.status(StatusCodes.BAD_REQUEST).end();
