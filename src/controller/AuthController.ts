@@ -107,12 +107,23 @@ export const kakao = async (req: Request, res: Response) => {
       sameSite: "none",
     });
 
-    return res.status(StatusCodes.OK).json({
-      message: "카카오 로그인 성공 (쿠키 저장)",
-      accessToken: appAccessToken,
-    });
-  } catch (err) {
-    console.error("카카오 로그인 오류:", err);
+    return res.redirect(
+      `http://localhost:5173/oauthcallback?token=${appAccessToken}&nickname=${encodeURIComponent(
+        nickname
+      )}`
+    );
+  } catch (err: unknown) {
+    if (axios.isAxiosError(err)) {
+      // Axios 에러
+      console.error("카카오 로그인 오류:", err.response?.data || err.message);
+    } else if (err instanceof Error) {
+      // 일반 에러
+      console.error("카카오 로그인 오류:", err.message);
+    } else {
+      // 어떤 에러인지 모름
+      console.error("카카오 로그인 오류:", err);
+    }
+
     return res.status(500).send("카카오 로그인 실패");
   }
 };
@@ -184,10 +195,15 @@ export const google = async (req: Request, res: Response) => {
       sameSite: "none",
     });
 
-    return res.status(200).json({
-      message: "구글 로그인 성공 (쿠키 저장)",
-      accessToken: appAccessToken,
-    });
+    // return res.status(200).json({
+    //   message: "구글 로그인 성공 (쿠키 저장)",
+    //   accessToken: appAccessToken,
+    // });
+    return res.redirect(
+      `http://localhost:5173/oauthcallback?token=${appAccessToken}&nickname=${encodeURIComponent(
+        nickname
+      )}`
+    );
   } catch (err: unknown) {
     //catch (err) {
     //console.error("구글 로그인 오류:", err.response?.data || err.message);
@@ -273,10 +289,11 @@ export const naver = async (req: Request, res: Response) => {
       sameSite: "none",
     });
 
-    return res.status(200).json({
-      message: "네이버 로그인 성공",
-      accessToken: appAccessToken,
-    });
+    return res.redirect(
+      `http://localhost:5173/oauthcallback?token=${appAccessToken}&nickname=${encodeURIComponent(
+        nickname
+      )}`
+    );
   } catch (err: unknown) {
     if (axios.isAxiosError(err)) {
       // Axios 에러일 경우

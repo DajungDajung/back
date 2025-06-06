@@ -20,9 +20,7 @@ app.use(
   })
 );
 
-const {
-  getRecentItems,
-} = require("./src/controller/ItemController");
+const { getRecentItems } = require("./src/controller/ItemController");
 
 app.use(express.json());
 
