@@ -1,5 +1,4 @@
 import { Request, Response } from "express";
-import { Item } from "../types/ItemType";
 import { FieldPacket, ResultSetHeader } from "mysql2";
 import { StatusCodes } from "http-status-codes";
 import { Location } from "../types/LocationType";
@@ -9,44 +8,6 @@ import { GetNewValueOrDefault } from "./MyPageController";
 const ensureAuthorization = require("../modules/auth/ensureAuthorization");
 const jwtErrorHandler = require("../modules/auth/jwtErrorHandler");
 const mariadb = require("mysql2/promise");
-
-// export const getLocation = async (req: Request, res: Response) => {
-  
-//   try {
-//     const [foundItem, foundItemFields]: [Item[], FieldPacket[]] = await conn.query(
-//       sql,
-//       itemId
-//     );
-
-//     if (!foundItem?.length) {
-//       return res
-//         .status(StatusCodes.NOT_FOUND)
-//         .json({ message: "해당 ID의 아이템을 찾을 수 없습니다." });
-//     }
-
-//     sql = "SELECT * FROM location WHERE item_id = ?";
-
-//     const [result, resultFields]: [Location[], FieldPacket] = await conn.query(
-//       sql,
-//       itemId
-//     );
-
-//     if (!result?.length) {
-//       res
-//         .status(StatusCodes.NOT_FOUND)
-//         .json({ message: "location 정보를 불러올 수 없습니다." });
-//     }
-
-//     return res.status(StatusCodes.OK).json(result);
-//   } catch (err) {
-//     console.log(err);
-//     return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-//       message: "location 데이터를 가져오는 동안 오류가 발생했습니다.",
-//     });
-//   } finally {
-//     if (conn) await conn.end();
-//   }
-// };
 
 export const addLocation = async (req: Request, res: Response) => {
   const conn = await mariadb.createConnection({
@@ -140,8 +101,7 @@ export const updateLocation = async (req: Request, res: Response) => {
     }
 
     const newLocationDatas: Location = req.body;
-
-    const locationId: number = parseInt(req.params.id);
+    const locationId: number = req.body.location_id;
 
     const values = [
       GetNewValueOrDefault(newLocationDatas.title, foundUserLocation[0].title),
@@ -160,9 +120,8 @@ export const updateLocation = async (req: Request, res: Response) => {
       locationId
     ];
 
-    // 아이템마다 location의 id를 받아와야 함! -> 어디로 받아와야 하나요!?
     sql =
-      "UPDATE location SET title = ?, coordinate = ?, address = ? WHERE id = ?";
+      "UPDATE location SET title = ?, coordinate_x = ?, coordinate_y = ?, address = ? WHERE id = ?";
 
     const [result, resultFields]: [ResultSetHeader, FieldPacket] =
       await conn.query(sql, values);
@@ -175,6 +134,7 @@ export const updateLocation = async (req: Request, res: Response) => {
   } catch (err) {
     return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
       message: "location 데이터를 업데이트 하는 동안 오류가 발생했습니다.",
+      err
     });
   } finally {
     if (conn) await conn.end();
