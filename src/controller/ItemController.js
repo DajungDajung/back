@@ -286,7 +286,7 @@ const deleteItem = async (req, res) => {
   } catch (err) {
     return res
       .status(StatusCodes.BAD_REQUEST)
-      .json({ message: "상품 삭제에 실패했습니다.", err });
+      .json({ message: "상품 삭제에 실패했습니다." });
   } finally {
     if (conn) await conn.end();
   }
