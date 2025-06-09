@@ -24,7 +24,7 @@
     "sequelize": "^6.37.7",
     "sequelize-cli": "^6.6.3",
     "socket.io": "^4.8.1",
-    "ts-node": "^10.9.2",
+    "typeorm": "^0.3.24",
     "typescript": "^5.8.3",
     "uuid": "^11.1.0"
   },
