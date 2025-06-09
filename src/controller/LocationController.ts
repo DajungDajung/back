@@ -4,7 +4,7 @@ import { StatusCodes } from "http-status-codes";
 import { Location } from "../types/LocationType";
 import { TokenPayload } from "../types/TokenType";
 import { User } from "../types/UserType";
-import { GetNewValueOrDefault } from "./MyPageController";
+import { getNewValueOrDefault } from "./MyPageController";
 const ensureAuthorization = require("../modules/auth/ensureAuthorization");
 const jwtErrorHandler = require("../modules/auth/jwtErrorHandler");
 const mariadb = require("mysql2/promise");
@@ -104,16 +104,16 @@ export const updateLocation = async (req: Request, res: Response) => {
     const locationId: number = req.body.location_id;
 
     const values = [
-      GetNewValueOrDefault(newLocationDatas.title, foundUserLocation[0].title),
-      GetNewValueOrDefault(
+      getNewValueOrDefault(newLocationDatas.title, foundUserLocation[0].title),
+      getNewValueOrDefault(
         newLocationDatas.coordinate_x,
         foundUserLocation[0].title
       ),
-      GetNewValueOrDefault(
+      getNewValueOrDefault(
         newLocationDatas.coordinate_y,
         foundUserLocation[0].title
       ),
-      GetNewValueOrDefault(
+      getNewValueOrDefault(
         newLocationDatas.address,
         foundUserLocation[0].title
       ),
