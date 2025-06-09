@@ -96,29 +96,30 @@ export const getChatRooms = async (req: Request, res: Response) => {
       const rooms = await AppDataSource.query(
         `
           SELECT 
-          r.id AS room_id,
-          r.item_id,
-          r.last_message,
-          r.updated_at,
-          u.id AS user_id,
-          u.nickname,
-          u.img_id,
-          (
-            SELECT COUNT(*)
-            FROM chats c
-            WHERE c.room_id = r.id AND c.receiver_id = ? AND c.is_read = false
-          ) AS unread_count
-        FROM chat_rooms r
-        JOIN chat_room_users cru ON cru.room_id = r.id
-        JOIN users u ON u.id = cru.user_id
-        WHERE r.id IN (
-          SELECT cru2.room_id
-          FROM chat_room_users cru2
-          WHERE cru2.user_id = ?
-        ) AND u.id != ?
-        ORDER BY r.updated_at DESC
+            r.id AS room_id,
+            r.item_id,
+            r.last_message,
+            r.updated_at,
+            u.id AS user_id,
+            u.nickname,
+            u.img_id,
+            ? AS me_id,
+            (
+              SELECT COUNT(*)
+              FROM chats c
+              WHERE c.room_id = r.id AND c.receiver_id = ? AND c.is_read = false
+            ) AS unread_count
+          FROM chat_rooms r
+          JOIN chat_room_users cru ON cru.room_id = r.id
+          JOIN users u ON u.id = cru.user_id
+          WHERE r.id IN (
+            SELECT cru2.room_id
+            FROM chat_room_users cru2
+            WHERE cru2.user_id = ?
+          ) AND u.id != ?
+          ORDER BY r.updated_at DESC
       `,
-        [userId, userId, userId]
+        [userId, userId, userId, userId]
       );
 
       const convertedRooms = rooms.map((room: ChatRoom) => ({
