@@ -166,7 +166,7 @@ export const deleteUser = async (req: Request, res: Response) => {
   }
 };
 
-export const GetNewValueOrDefault = (
+export const getNewValueOrDefault = (
   newValue: string | number,
   defaultValue: string | number
 ) => {
