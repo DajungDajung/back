@@ -250,6 +250,8 @@ const deleteItem = async (req, res) => {
   let values = [itemId];
 
   try {
+    await conn.beginTransaction();
+
     // 1. location Id 조회
     let sql = "SELECT location_id FROM items WHERE id = ?";
     const [rows, fields] = await conn.query(sql, itemId);
@@ -263,7 +265,7 @@ const deleteItem = async (req, res) => {
 
     const [results, resultFields] = await conn.query(sql, values);
 
-    if (results.affectedRows == 0) {
+    if (results.affectedRows > 0) {
       throw new Error("item delete: affactedRows가 0입니다.");
     }
 
@@ -276,14 +278,16 @@ const deleteItem = async (req, res) => {
       locationId
     );
 
-    if (locationResult.affectedRows == 0) {
+    if (locationResult.affectedRows > 0) {
       throw new Error("location delete: affactedRows가 0입니다.");
     }
 
+    await conn.commit();
     return res
       .status(StatusCodes.OK)
       .json({ message: "상품 삭제에 성공했습니다." });
   } catch (err) {
+    await conn.rollback();
     return res
       .status(StatusCodes.BAD_REQUEST)
       .json({ message: "상품 삭제에 실패했습니다.", err });

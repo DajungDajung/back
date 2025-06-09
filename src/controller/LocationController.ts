@@ -88,7 +88,7 @@ export const updateLocation = async (req: Request, res: Response) => {
   }
 
   const userId: number = authorization.user_id;
-  let sql = "SELECT * FROM location WHERE user_id = ?";
+  let sql = "SELECT 1 FROM location WHERE user_id = ?";
 
   try {
     const [foundUserLocation, foundUserFields]: [Location[], FieldPacket[]] =
