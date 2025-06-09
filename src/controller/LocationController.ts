@@ -88,7 +88,7 @@ export const updateLocation = async (req: Request, res: Response) => {
   }
 
   const userId: number = authorization.user_id;
-  let sql = "SELECT 1 FROM location WHERE user_id = ?";
+  let sql = "SELECT * FROM location WHERE user_id = ?";
 
   try {
     const [foundUserLocation, foundUserFields]: [Location[], FieldPacket[]] =
@@ -107,15 +107,15 @@ export const updateLocation = async (req: Request, res: Response) => {
       getNewValueOrDefault(newLocationDatas.title, foundUserLocation[0].title),
       getNewValueOrDefault(
         newLocationDatas.coordinate_x,
-        foundUserLocation[0].title
+        foundUserLocation[0].coordinate_x
       ),
       getNewValueOrDefault(
         newLocationDatas.coordinate_y,
-        foundUserLocation[0].title
+        foundUserLocation[0].coordinate_y
       ),
       getNewValueOrDefault(
         newLocationDatas.address,
-        foundUserLocation[0].title
+        foundUserLocation[0].address
       ),
       locationId
     ];
@@ -130,11 +130,10 @@ export const updateLocation = async (req: Request, res: Response) => {
       throw new Error("데이터 삽입 실패: affectedRows가 0입니다.");
     }
 
-    return res.status(StatusCodes.OK).json(result);
+    return res.status(StatusCodes.CREATED).json(result);
   } catch (err) {
     return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
-      message: "location 데이터를 업데이트 하는 동안 오류가 발생했습니다.",
-      err
+      message: "location 데이터를 업데이트 하는 동안 오류가 발생했습니다."
     });
   } finally {
     if (conn) await conn.end();
