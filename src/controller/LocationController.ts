@@ -130,7 +130,7 @@ export const updateLocation = async (req: Request, res: Response) => {
       throw new Error("데이터 삽입 실패: affectedRows가 0입니다.");
     }
 
-    return res.status(StatusCodes.CREATED).json(result);
+    return res.status(StatusCodes.OK).json(result);
   } catch (err) {
     return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
       message: "location 데이터를 업데이트 하는 동안 오류가 발생했습니다."
