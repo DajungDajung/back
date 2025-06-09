@@ -265,7 +265,7 @@ const deleteItem = async (req, res) => {
 
     const [results, resultFields] = await conn.query(sql, values);
 
-    if (results.affectedRows < 0) {
+    if (results.affectedRows === 0) {
       throw new Error("item delete: affactedRows가 0입니다.");
     }
 
