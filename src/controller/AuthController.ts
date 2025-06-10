@@ -111,7 +111,7 @@ export const kakaoCallback = async (req: Request, res: Response) => {
     });
 
     return res.redirect(
-      `http://localhost:5174/oauthcallback?token=${appAccessToken}&nickname=${encodeURIComponent(
+      `http://3.34.9.40:3002/oauthcallback?token=${appAccessToken}&nickname=${encodeURIComponent(
         nickname
       )}`
     );
@@ -207,7 +207,7 @@ export const googleCallback = async (req: Request, res: Response) => {
     //   accessToken: appAccessToken,
     // });
     return res.redirect(
-      `http://localhost:5174/oauthcallback?token=${appAccessToken}&nickname=${encodeURIComponent(
+      `http://3.34.9.40:3002/oauthcallback?token=${appAccessToken}&nickname=${encodeURIComponent(
         nickname
       )}`
     );
@@ -302,7 +302,7 @@ export const naverCallback = async (req: Request, res: Response) => {
     });
 
     return res.redirect(
-      `http://localhost:5174/oauthcallback?token=${appAccessToken}&nickname=${encodeURIComponent(
+      `http://3.34.9.40:3002/oauthcallback?token=${appAccessToken}&nickname=${encodeURIComponent(
         nickname
       )}`
     );
