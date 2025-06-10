@@ -4,7 +4,7 @@ const app = express();
 const cors = require("cors");
 const { Server } = require("socket.io");
 require("dotenv").config();
-const { AppDataSource } = require("./dist/src/data-source");
+const { AppDataSource } = require("./src/data-source");
 
 const server = http.createServer(app);
 const io = new Server(server, {
