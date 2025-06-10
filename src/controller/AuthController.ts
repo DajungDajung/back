@@ -111,7 +111,7 @@ export const kakaoCallback = async (req: Request, res: Response) => {
     });
 
     return res.redirect(
-      `http://localhost:5173/oauthcallback?token=${appAccessToken}&nickname=${encodeURIComponent(
+      `http://localhost:5174/oauthcallback?token=${appAccessToken}&nickname=${encodeURIComponent(
         nickname
       )}`
     );
@@ -207,7 +207,7 @@ export const googleCallback = async (req: Request, res: Response) => {
     //   accessToken: appAccessToken,
     // });
     return res.redirect(
-      `http://localhost:5173/oauthcallback?token=${appAccessToken}&nickname=${encodeURIComponent(
+      `http://localhost:5174/oauthcallback?token=${appAccessToken}&nickname=${encodeURIComponent(
         nickname
       )}`
     );
