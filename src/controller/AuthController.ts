@@ -42,8 +42,11 @@ export const signUp = (req: Request, res: Response) => {
     return res.status(StatusCodes.CREATED).json(results);
   });
 };
-
 export const kakao = async (req: Request, res: Response) => {
+  const redirectUrl = `https://kauth.kakao.com/oauth/authorize?client_id=${process.env.KAKAO_CLIENT_ID}&redirect_uri=${process.env.KAKAO_REDIRECT_URI}&response_type=code`;
+  res.redirect(redirectUrl);
+};
+export const kakaoCallback = async (req: Request, res: Response) => {
   const { code } = req.query;
   if (!code) return res.status(400).send("인가코드 없음");
 
@@ -127,8 +130,12 @@ export const kakao = async (req: Request, res: Response) => {
     return res.status(500).send("카카오 로그인 실패");
   }
 };
-
 export const google = async (req: Request, res: Response) => {
+  const redirectUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${process.env.GOOGLE_CLIENT_ID}&redirect_uri=${process.env.GOOGLE_REDIRECT_URI}&response_type=code&scope=email profile openid&access_type=offline`;
+
+  res.redirect(redirectUrl);
+};
+export const googleCallback = async (req: Request, res: Response) => {
   const { code } = req.query;
   if (!code) return res.status(400).send("인가코드 없음");
 
@@ -225,6 +232,11 @@ export const google = async (req: Request, res: Response) => {
 };
 
 export const naver = async (req: Request, res: Response) => {
+  const redirectUrl = `https://nid.naver.com/oauth2.0/authorize?response_type=code&client_id=${process.env.NAVER_CLIENT_ID}&redirect_uri=${process.env.NAVER_REDIRECT_URI}&state=RANDOM_STATE_STRING`;
+
+  res.redirect(redirectUrl);
+};
+export const naverCallback = async (req: Request, res: Response) => {
   const { code, state } = req.query;
   if (!code || !state) return res.status(400).send("인가 코드 또는 state 누락");
 
@@ -483,6 +495,9 @@ module.exports = {
   passwordReset,
   logout,
   kakao,
+  kakaoCallback,
   google,
+  googleCallback,
   naver,
+  naverCallback,
 };
