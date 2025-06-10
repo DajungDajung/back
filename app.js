@@ -9,33 +9,33 @@ const { AppDataSource } = require("./dist/src/data-source");
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:5173",
+    origin: "http://localhost:5174",
     credentials: true,
   },
 });
 
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: "http://localhost:5174",
     credentials: true,
   })
 );
 
-const { getRecentItems } = require("./dist/src/controller/ItemController");
+const { getRecentItems } = require("./src/controller/ItemController");
 
 app.use(express.json());
 
 server.listen(process.env.PORT);
 
-const itemRouter = require("./dist/src/routes/items");
-const likeRouter = require("./dist/src/routes/likes");
-const commentRouter = require("./dist/src/routes/comments");
-const authRouter = require("./dist/src/routes/auth");
-const MyPageRouter = require("./dist/src/routes/myPage");
-const StoreRouter = require("./dist/src/routes/store");
-const ChatRouter = require("./dist/src/routes/chats");
-const CategoryRouter = require("./dist/src/routes/category");
-const LocationRouter = require("./dist/src/routes/location");
+const itemRouter = require("./src/routes/items");
+const likeRouter = require("./src/routes/likes");
+const commentRouter = require("./src/routes/comments");
+const authRouter = require("./src/routes/auth");
+const MyPageRouter = require("./src/routes/myPage");
+const StoreRouter = require("./src/routes/store");
+const ChatRouter = require("./src/routes/chats");
+const CategoryRouter = require("./src/routes/category");
+const LocationRouter = require("./src/routes/location");
 
 app.use("/items", itemRouter);
 app.use("/users/likes", likeRouter);
@@ -50,7 +50,7 @@ app.use("/location", LocationRouter);
 app.get("/", getRecentItems);
 app.get("/favicon.ico", (req, res) => res.sendStatus(204));
 
-const chatSocket = require("./dist/src/modules/chatSocket");
+const chatSocket = require("./src/modules/chatSocket");
 
 AppDataSource.initialize()
   .then(() => {
