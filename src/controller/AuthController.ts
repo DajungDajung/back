@@ -105,7 +105,7 @@ export const kakaoCallback = async (req: Request, res: Response) => {
     );
 
     res.cookie("token", appAccessToken, {
-      httpOnly: false,
+      httpOnly: true,
       secure: true,
       sameSite: "none",
     });
@@ -207,7 +207,7 @@ export const googleCallback = async (req: Request, res: Response) => {
     //   accessToken: appAccessToken,
     // });
     return res.redirect(
-      `http://3.34.9.40:3002/oauthcallback?token=${appAccessToken}&nickname=${encodeURIComponent(
+      `http://ec2-3-34-9-40.ap-northeast-2.compute.amazonaws.com:3002/oauthcallback?token=${appAccessToken}&nickname=${encodeURIComponent(
         nickname
       )}`
     );
@@ -241,7 +241,6 @@ export const naverCallback = async (req: Request, res: Response) => {
   if (!code || !state) return res.status(400).send("인가 코드 또는 state 누락");
 
   try {
-    //access_token 요청
     const tokenResponse = await axios.get(
       "https://nid.naver.com/oauth2.0/token",
       {
@@ -257,7 +256,6 @@ export const naverCallback = async (req: Request, res: Response) => {
 
     const { access_token } = tokenResponse.data;
 
-    //사용자 정보 요청
     const userResponse = await axios.get(
       "https://openapi.naver.com/v1/nid/me",
       {
@@ -268,60 +266,120 @@ export const naverCallback = async (req: Request, res: Response) => {
     );
 
     const naverUser = userResponse.data.response;
-    const naverId = naverUser.id;
+    const email = naverUser.email;
+    const contact = naverUser.mobile || "정보없음";
+    const name = naverUser.name || "naver_user";
     const nickname = naverUser.nickname || "naver_user";
 
-    //JWT 발급
-    const appAccessToken = jwt.sign(
-      {
-        naver_id: naverId,
-        nickname,
-        provider: "naver",
-      },
-      process.env.PRIVATE_KEY,
-      {
-        expiresIn: "30m",
-        issuer: "kim",
-      }
-    );
+    const salt = crypto.randomBytes(64).toString("base64");
+    const fakePassword = crypto.randomBytes(16).toString("hex");
+    const hashedPassword = crypto
+      .pbkdf2Sync(fakePassword, salt, 10000, 64, "sha512")
+      .toString("base64");
 
-    const appRefreshToken = jwt.sign(
-      { naver_id: naverId },
-      process.env.PRIVATE_KEY,
-      {
-        expiresIn: "14d",
-        issuer: "kim",
+    const checkSql = "SELECT * FROM users WHERE email = ?";
+    conn.query(checkSql, [email], (err: Error, results: RowDataPacket[]) => {
+      if (err) {
+        console.error("유저 확인 오류:", err);
+        return res.status(500).send("DB 조회 실패");
       }
-    );
 
-    //쿠키 저장
-    res.cookie("token", appAccessToken, {
-      httpOnly: false,
-      secure: true,
-      sameSite: "none",
+      const proceed = (userId: number, userSalt: string) => {
+        const accessToken = jwt.sign(
+          {
+            user_id: userId,
+            nickname,
+            provider: "naver",
+          },
+          process.env.PRIVATE_KEY,
+          {
+            expiresIn: "30m",
+            issuer: "kim",
+          }
+        );
+
+        const refreshToken = jwt.sign(
+          {
+            user_id: userId,
+          },
+          process.env.PRIVATE_KEY,
+          {
+            expiresIn: "14d",
+            issuer: "kim",
+          }
+        );
+
+        const tokenSql = `INSERT INTO tokens (user_id, refresh_token, salt, created_at, expires_at)
+          VALUES (?, ?, ?, NOW(), DATE_ADD(NOW(), INTERVAL 14 DAY))
+          ON DUPLICATE KEY UPDATE
+            refresh_token = VALUES(refresh_token),
+            salt = VALUES(salt),
+            created_at = NOW(),
+            expires_at = DATE_ADD(NOW(), INTERVAL 14 DAY)`;
+
+        const tokenValues = [userId, refreshToken, userSalt];
+
+        conn.query(tokenSql, tokenValues, (err2: Error) => {
+          if (err2) {
+            console.error("토큰 저장 실패:", err2);
+            return res.status(500).send("토큰 저장 실패");
+          }
+
+          res.cookie("token", accessToken, {
+            httpOnly: true,
+            secure: true,
+            sameSite: "none",
+          });
+
+          return res.redirect(
+            `http://3.34.9.40:3002/oauthcallback?token=${accessToken}&nickname=${encodeURIComponent(
+              nickname
+            )}`
+          );
+        });
+      };
+
+      if (results.length === 0) {
+        const insertSql = `
+          INSERT INTO users (name, nickname, email, contact, password, salt, created_at)
+          VALUES (?, ?, ?, ?, ?, ?, NOW())
+        `;
+        const values = [name, nickname, email, contact, hashedPassword, salt];
+
+        conn.query(
+          insertSql,
+          values,
+          (insertErr: Error, insertResult: OkPacketParams) => {
+            if (insertErr) {
+              console.error("유저 저장 실패:", insertErr);
+              return res.status(500).send("DB 저장 실패");
+            }
+
+            const newUserId = insertResult.insertId;
+            if (typeof newUserId !== "number") {
+              return res.status(500).send("insertId가 없습니다");
+            }
+
+            proceed(newUserId, salt);
+          }
+        );
+      } else {
+        const existingUser = results[0];
+        proceed(existingUser.id, existingUser.salt);
+      }
     });
-
-    return res.redirect(
-      `http://3.34.9.40:3002/oauthcallback?token=${appAccessToken}&nickname=${encodeURIComponent(
-        nickname
-      )}`
-    );
   } catch (err: unknown) {
     if (axios.isAxiosError(err)) {
-      // Axios 에러일 경우
       console.error("네이버 로그인 오류:", err.response?.data || err.message);
     } else if (err instanceof Error) {
-      // 일반 JS 에러일 경우
       console.error("네이버 로그인 오류:", err.message);
     } else {
-      // 그 외 알 수 없는 예외
       console.error("네이버 로그인 오류:", err);
     }
 
     return res.status(500).send("네이버 로그인 실패");
   }
 };
-
 export const signIn = (req: Request, res: Response) => {
   const { email, password } = req.body;
   let sql = "SELECT * FROM users WHERE email = ?";
