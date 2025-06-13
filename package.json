@@ -8,12 +8,15 @@
   "dependencies": {
     "@faker-js/faker": "^9.7.0",
     "@tsconfig/recommended": "^1.0.8",
+    "@types/express": "^5.0.2",
     "@types/jest": "^29.5.14",
     "@types/react": "^19.1.5",
     "@types/react-dom": "^19.1.5",
     "@types/socket.io": "^3.0.1",
     "@types/uuid": "^10.0.0",
+    "axios": "^1.9.0",
     "cors": "^2.8.5",
+    "dayjs": "^1.11.13",
     "dotenv": "^16.5.0",
     "express": "^4.21.2",
     "express-validator": "^7.2.1",
@@ -21,6 +24,7 @@
     "http-status-codes": "^2.3.0",
     "jsonwebtoken": "^9.0.2",
     "mysql2": "^3.14.1",
+    "reflect-metadata": "^0.2.2",
     "sequelize": "^6.37.7",
     "sequelize-cli": "^6.6.3",
     "socket.io": "^4.8.1",
@@ -29,9 +33,11 @@
     "uuid": "^11.1.0"
   },
   "devDependencies": {
+    "@tsconfig/node23": "^23.0.2",
+    "@tsconfig/recommended": "^1.0.8",
     "@types/express": "^5.0.2",
     "@types/jsonwebtoken": "^9.0.9",
-    "@types/node": "^22.15.21",
+    "@types/node": "^22.15.31",
     "nodemon": "^3.1.9",
     "ts-node": "^10.9.2",
     "typescript": "^5.8.3"

@@ -9,14 +9,14 @@ const { AppDataSource } = require("./src/data-source");
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:5173",
+    origin: "http://3.34.9.40:3002",
     credentials: true,
   },
 });
 
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: "http://3.34.9.40:3002",
     credentials: true,
   })
 );
